@@ -17,6 +17,9 @@
 *.zip
 *.tar.gz
 *.rar
+*.settings
+*.project
+*.classpath
 
 # Remove XML Files
 !*.xml
