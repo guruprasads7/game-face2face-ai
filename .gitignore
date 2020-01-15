@@ -21,6 +21,9 @@
 *.project
 *.classpath
 
+# Executable created inside target
+*target/
+
 # Remove XML Files
 !*.xml
 
