@@ -11,7 +11,7 @@ public class RunGameMCTS {
 
 	public static void main(String[] args) {
 		
-		Game game = new Game(new MCTSImplementer("a"), new MCTSImplementer("b"));
+		Game game = new Game(new MCTSImplementer("a"), new MCTSImplementer("b"),10);
 		Player winner = game.simulate();
 		game.getHistory().printHistory();
 	}
