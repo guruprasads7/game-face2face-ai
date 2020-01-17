@@ -13,15 +13,15 @@ import de.upb.isml.thegamef2f.engine.Placement;
 import de.upb.isml.thegamef2f.engine.board.Card;
 import de.upb.isml.thegamef2f.engine.player.Player;
 
-public class MCTSImplementer implements Player {
+public class InformedPlayer implements Player {
 
 	private Random random;
 	private String name;
 
-	private final int ownDiscardPileThreshold = 5;
+	private final int ownDiscardPileThreshold = 15;
 	private final int opponentDiscardPileThreshold = 5;
 
-	public MCTSImplementer(String name) {
+	public InformedPlayer(String name) {
 		this.name = name;
 	}
 
@@ -49,12 +49,39 @@ public class MCTSImplementer implements Player {
 		if (isPlacementValid(cardPlacement, currentGameState, !placedOnOppositePiles)) {
 			listOfCardPlacements.add(cardPlacement);
 			currentGameState = computeNewGameStateAfterPlacement(currentGameState, cardPlacement);
+			System.out.println("new game state" + currentGameState.getHandCards().toString());
 		}
 
 		return listOfCardPlacements;
 	}
 
+	private IntermediateMoveStatus backwardsTrickValidator(GameState currentGameState, List<Card> currentHandCards,Card currentTopCardOnOwnAscedingDiscardPile, Card currentTopCardOnOwnDescendingDiscardPile,List<Placement> listOfCardPlacements){
+		
+		// Test for Backwards Trick
+		for (Card card : currentHandCards) {
 
+			// Test if a current card is 10 lesser than topCardOnOwnAscendingDiscardPile
+			if (card.is10SmallerThan(currentTopCardOnOwnAscedingDiscardPile)) {
+
+				listOfCardPlacements = cardPlacementValidatorAndUpdator(currentGameState, card,
+						CardPosition.OWN_ASCENDING_DISCARD_PILE, listOfCardPlacements);
+				currentTopCardOnOwnAscedingDiscardPile = card;
+			}
+
+			// Test if a current card is 10 greater than topCardOnOwnDescendingDiscardPile
+			if (card.is10LargerThan(currentTopCardOnOwnDescendingDiscardPile)) {
+
+				listOfCardPlacements = cardPlacementValidatorAndUpdator(currentGameState, card,
+						CardPosition.OWN_DESCENDING_DISCARD_PILE, listOfCardPlacements);
+				currentTopCardOnOwnDescendingDiscardPile = card;
+				
+			}
+
+		}
+		
+		return new IntermediateMoveStatus(currentGameState,listOfCardPlacements,currentTopCardOnOwnAscedingDiscardPile,currentTopCardOnOwnDescendingDiscardPile);
+		
+	}
 	
 	private List<Placement> getCardPlacement(GameState gameState) {
 
@@ -68,11 +95,11 @@ public class MCTSImplementer implements Player {
 		Card topCardOnOpponentDescendingDiscardPile = gameState.getTopCardOnOpponentsDescendingDiscardPile();
 
 		int ownDiscardPilesAverage = Math
-				.abs(gameState.getTopCardOnOwnAscendingDiscardPile().getNumber() + gameState.getTopCardOnOwnDescendingDiscardPile().getNumber()) / 2;
+				.abs(topCardOnOwnAscendingDiscardPile.getNumber() + topCardOnOwnDescendingDiscardPile.getNumber()) / 2;
 
 		System.out.println(
-				"Own game state : topCardOnOwnAscendingDiscardPile = " + gameState.getTopCardOnOwnAscendingDiscardPile().getNumber()
-						+ " , topCardOnOwnDescendingDiscardPile = " + gameState.getTopCardOnOwnDescendingDiscardPile().getNumber());
+				"Own game state : topCardOnOwnAscendingDiscardPile = " + topCardOnOwnAscendingDiscardPile.getNumber()
+						+ " , topCardOnOwnDescendingDiscardPile = " + topCardOnOwnDescendingDiscardPile.getNumber());
 		System.out.println("Opponents game state : topCardOnOpponentAscendingDiscardPile = "
 				+ gameState.getTopCardOnOpponentsAscendingDiscardPile().getNumber() + " , topCardOnOpponentDescendingDiscardPile = "
 				+ gameState.getTopCardOnOpponentsDescendingDiscardPile().getNumber());
@@ -83,31 +110,26 @@ public class MCTSImplementer implements Player {
 		// Sorting the cards in Ascending order
 		orderedCurrentHandCards.sort((Card c1, Card c2) -> c1.getNumber() - c2.getNumber());
 
+		Card smallest = orderedCurrentHandCards.get(0);
+		Card largest = orderedCurrentHandCards.get(orderedCurrentHandCards.size() - 1);
+
+		
 		// Sorting the cards in Descending order
 		List<Card> descOrderedCurrentHandCards = new ArrayList<Card>(gameState.getHandCards());
 		
 		descOrderedCurrentHandCards.sort((Card c1, Card c2) -> c2.getNumber() - c1.getNumber());
 		
-		// Test for Backwards Trick
-		for (Card card : orderedCurrentHandCards) {
-
-			// Test if a current card is 10 lesser than topCardOnOwnAscendingDiscardPile
-			if (card.is10SmallerThan(gameState.getTopCardOnOwnAscendingDiscardPile())) {
-
-				placementsOfMove = cardPlacementValidatorAndUpdator(gameState, card,
-						CardPosition.OWN_ASCENDING_DISCARD_PILE, placementsOfMove);
-			}
-
-			// Test if a current card is 10 greater than topCardOnOwnDescendingDiscardPile
-			if (card.is10LargerThan(gameState.getTopCardOnOwnDescendingDiscardPile())) {
-
-				placementsOfMove = cardPlacementValidatorAndUpdator(gameState, card,
-						CardPosition.OWN_DESCENDING_DISCARD_PILE, placementsOfMove);
-			}
-
-		}
-	
 		
+		//// Real Logic starts here.
+
+		// Test for Backwards Trick
+		 IntermediateMoveStatus intermediateMoveStatus = backwardsTrickValidator(gameState,orderedCurrentHandCards,topCardOnOwnAscendingDiscardPile,topCardOnOwnDescendingDiscardPile,placementsOfMove);
+		 gameState = intermediateMoveStatus.getGameState();
+		 topCardOnOwnAscendingDiscardPile = intermediateMoveStatus.getCurrentTopCardOnOwnAscedingDiscardPile();
+		 topCardOnOwnDescendingDiscardPile = intermediateMoveStatus.getCurrentTopCardOnOwnDescendingDiscardPile();
+		 placementsOfMove = intermediateMoveStatus.getListOfCardPlacements();
+		 
+		 
 				
 		// For ascending order rule
 		for (Card card : orderedCurrentHandCards) {
@@ -121,8 +143,8 @@ public class MCTSImplementer implements Player {
 			try {
 				
 				// Rule for placement on own Ascending Discard pile
-				if (card.getNumber() > gameState.getTopCardOnOwnAscendingDiscardPile().getNumber() && card
-						.getNumber() < (gameState.getTopCardOnOwnAscendingDiscardPile().getNumber() + ownDiscardPileThreshold)) {
+				if (card.getNumber() > topCardOnOwnAscendingDiscardPile.getNumber() && card
+						.getNumber() < (topCardOnOwnAscendingDiscardPile.getNumber() + ownDiscardPileThreshold)) {
 					
 					System.out.println("Inside own Ascending Discard pile");
 					placementsOfMove = cardPlacementValidatorAndUpdator(gameState, card,
@@ -161,8 +183,8 @@ public class MCTSImplementer implements Player {
 						
 
 						// Rule for placement on own Descending Discard pile
-						if (card.getNumber() < gameState.getTopCardOnOwnDescendingDiscardPile().getNumber() && card
-								.getNumber() > (gameState.getTopCardOnOwnDescendingDiscardPile().getNumber() - ownDiscardPileThreshold)) {
+						if (card.getNumber() < topCardOnOwnDescendingDiscardPile.getNumber() && card
+								.getNumber() > (topCardOnOwnDescendingDiscardPile.getNumber() - ownDiscardPileThreshold)) {
 							
 							System.out.println("Inside own Descending Discard pile");
 							placementsOfMove = cardPlacementValidatorAndUpdator(gameState, card,
