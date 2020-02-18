@@ -1,18 +1,18 @@
 package de.upb.mlseminar;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Random;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import de.upb.isml.thegamef2f.engine.CardPosition;
 import de.upb.isml.thegamef2f.engine.GameState;
 import de.upb.isml.thegamef2f.engine.Move;
 import de.upb.isml.thegamef2f.engine.Placement;
-import de.upb.isml.thegamef2f.engine.board.AscendingDiscardPile;
 import de.upb.isml.thegamef2f.engine.board.Card;
 import de.upb.isml.thegamef2f.engine.player.Player;
 
@@ -21,9 +21,11 @@ public class InformedPlayer implements Player {
 	private Random random;
 	private String name;
 
-	private int ownDiscardPileThreshold = 3;
+	private int ownDiscardPileThreshold = 5;
 	private int ownDiscardPileIncreamentFactor = 3;
-	private final int opponentDiscardPileThreshold = 5;
+	private final int opponentDiscardPileThreshold = 10;
+
+	private static final Logger logger = LoggerFactory.getLogger(InformedPlayer.class);
 
 	public InformedPlayer(String name) {
 		this.name = name;
@@ -68,44 +70,59 @@ public class InformedPlayer implements Player {
 	private IntermediateMoveStatus backwardsTrickValidator(GameState currentGameState, List<Card> currentHandCards,
 			Card currenttopCardOnOwnAscendingDiscardPile, Card currentTopCardOnOwnDescendingDiscardPile) {
 
-		System.out.println("Inside Backwards Trick Validator");
+		logger.debug("Start of the method : backwardsTrickValidator");
 		List<Placement> cardPlacementList = new ArrayList<Placement>();
-		// Test for Backwards Trick
-		for (Card card : currentHandCards) {
 
-			// Test if a current card is 10 lesser than topCardOnOwnAscendingDiscardPile
-			if (card.is10SmallerThan(currenttopCardOnOwnAscendingDiscardPile)) {
+		ListIterator<Card> backwardCardIterator = currentHandCards.listIterator();
 
-				Placement temp = cardPlacementUpdator(currentGameState, card, CardPosition.OWN_ASCENDING_DISCARD_PILE);
+		try {
+			// Test for Backwards Trick
+			while (backwardCardIterator.hasNext()) {
+				Card card = backwardCardIterator.next();
 
-				if (temp != null) {
-					cardPlacementList.add(temp);
-					currenttopCardOnOwnAscendingDiscardPile = card;
+				logger.debug("Processing for card" + card);
+
+				// Test if a current card is 10 lesser than topCardOnOwnAscendingDiscardPile
+				if (card.is10SmallerThan(currenttopCardOnOwnAscendingDiscardPile)) {
+					logger.debug("The current card " + card + " is 10 lesser than the current top card "
+							+ currenttopCardOnOwnAscendingDiscardPile + " on the Ascending order file");
+
+					Placement temp = cardPlacementUpdator(currentGameState, card,
+							CardPosition.OWN_ASCENDING_DISCARD_PILE);
+
+					if (temp != null) {
+						cardPlacementList.add(temp);
+						currenttopCardOnOwnAscendingDiscardPile = card;
+						backwardCardIterator.remove();
+					}
+
+				}
+
+				// Test if a current card is 10 greater than topCardOnOwnDescendingDiscardPile
+				if (card.is10LargerThan(currentTopCardOnOwnDescendingDiscardPile)) {
+					logger.debug("The current card " + card + "is 10 greater than the current top card "
+							+ currentTopCardOnOwnDescendingDiscardPile + " on the Descending order file");
+					Placement temp = cardPlacementUpdator(currentGameState, card,
+							CardPosition.OWN_DESCENDING_DISCARD_PILE);
+
+					if (temp != null) {
+						cardPlacementList.add(temp);
+						currentTopCardOnOwnDescendingDiscardPile = card;
+						backwardCardIterator.remove();
+					}
+
 				}
 
 			}
-
-			// Test if a current card is 10 greater than topCardOnOwnDescendingDiscardPile
-			if (card.is10LargerThan(currentTopCardOnOwnDescendingDiscardPile)) {
-
-				Placement temp = cardPlacementUpdator(currentGameState, card, CardPosition.OWN_DESCENDING_DISCARD_PILE);
-
-				if (temp != null) {
-					cardPlacementList.add(temp);
-					currentTopCardOnOwnDescendingDiscardPile = card;
-				}
-
-			}
-
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error(e.toString());
+			System.out.println(e);
 		}
 
-		for (Placement currentPlacement : cardPlacementList) {
-			if (currentHandCards.contains(currentPlacement.getCard()))
-				currentHandCards.remove(currentPlacement.getCard());
-		}
+		logger.debug("End of the method : backwardsTrickValidator");
+		logger.debug("===================================================================================");
 
-		// System.out.println("Placements from backwardTrick : " +
-		// cardPlacementList.toString());
 		return new IntermediateMoveStatus(currentGameState, currentHandCards, cardPlacementList,
 				currenttopCardOnOwnAscendingDiscardPile, currentTopCardOnOwnDescendingDiscardPile);
 
@@ -114,124 +131,117 @@ public class InformedPlayer implements Player {
 	private IntermediateMoveStatus opponentCardPlacement(GameState currentGameState, List<Card> currentHandCards,
 			Card currentTopCardOnOpponentAscedingDiscardPile, Card currentTopCardOnOpponentDescendingDiscardPile) {
 
+		logger.debug("Start of the method : opponentCardPlacement");
+
 		List<Placement> cardPlacementList = new ArrayList<Placement>();
 		Card bestCandidate = null;
 		int leastDifference = 99999;
 		int ascOrDecFlag = -1; // 1 for ascending, 2 for descending
-		int cardIndexInList = -1;
 
-		for (Card card : currentHandCards) {
-			// System.out.println("Processing Card =" + card.getNumber());
-			int diffBtwOpponentAscendingDiscardPile = currentTopCardOnOpponentAscedingDiscardPile.getNumber()
-					- card.getNumber();
-			int diffBtwOpponentDescendingDiscardPile = card.getNumber()
-					- currentTopCardOnOpponentDescendingDiscardPile.getNumber();
+		ListIterator<Card> opponentCardIterator = currentHandCards.listIterator();
 
-			int currentMinDifference = 99999;
-			Card currentBestCandidate = null;
-			int localAscOrDecFlag = -1;
+		try {
 
-			// Rule for placement on Opponents Ascending Discard pile
-			if (diffBtwOpponentAscendingDiscardPile > 0
-					&& card.getNumber() < currentTopCardOnOpponentAscedingDiscardPile.getNumber()
-					&& card.getNumber() > (currentTopCardOnOpponentAscedingDiscardPile.getNumber()
-							- opponentDiscardPileThreshold)) {
+			while (opponentCardIterator.hasNext()) {
+				Card card = opponentCardIterator.next();
 
-				if (diffBtwOpponentAscendingDiscardPile < currentMinDifference) {
-					currentMinDifference = diffBtwOpponentAscendingDiscardPile;
-					currentBestCandidate = card;
-					localAscOrDecFlag = 1;
-					// localCardIndexInList = card.get
-					System.out.println("Inside Opponents Ascending Discard pile");
+				logger.debug("Processing for card" + card);
+				int diffBtwOpponentAscendingDiscardPile = currentTopCardOnOpponentAscedingDiscardPile.getNumber()
+						- card.getNumber();
+				int diffBtwOpponentDescendingDiscardPile = card.getNumber()
+						- currentTopCardOnOpponentDescendingDiscardPile.getNumber();
+
+				int currentMinDifference = 99999;
+				Card currentBestCandidate = null;
+				int localAscOrDecFlag = -1;
+
+				// Rule for placement on Opponents Ascending Discard pile
+				logger.debug("Checking the rule for placement on Opponents Ascending Discard pile");
+
+				if (diffBtwOpponentAscendingDiscardPile > 0
+						&& card.getNumber() < currentTopCardOnOpponentAscedingDiscardPile.getNumber()
+						&& card.getNumber() > (currentTopCardOnOpponentAscedingDiscardPile.getNumber()
+								- opponentDiscardPileThreshold)) {
+
+					if (diffBtwOpponentAscendingDiscardPile < currentMinDifference) {
+						currentMinDifference = diffBtwOpponentAscendingDiscardPile;
+						currentBestCandidate = card;
+						localAscOrDecFlag = 1;
+						logger.debug(
+								"Card " + card + "Can be considered to be placed on Opponents Ascending Discard pile");
+					}
+
+				}
+
+				// Rule for placement on own Descending Discard pile
+				logger.debug("Checking the rule for placement on own Descending Discard pile");
+				if (diffBtwOpponentDescendingDiscardPile > 0
+						&& card.getNumber() > currentTopCardOnOpponentDescendingDiscardPile.getNumber()
+						&& card.getNumber() < (currentTopCardOnOpponentDescendingDiscardPile.getNumber()
+								+ opponentDiscardPileThreshold)) {
+
+					if (diffBtwOpponentDescendingDiscardPile < currentMinDifference) {
+						currentMinDifference = diffBtwOpponentDescendingDiscardPile;
+						currentBestCandidate = card;
+						localAscOrDecFlag = 2;
+						logger.debug(
+								"Card " + card + "Can be considered to be placed on Opponents Descending Discard pile");
+					}
+
+				}
+
+				// Check for the best card which can be placed on opponents discard pile as only
+				// one card can be placed at most in one turn
+				if (currentBestCandidate != null && currentMinDifference < leastDifference && localAscOrDecFlag > 0) {
+
+					logger.debug(
+							"The card" + card + "Is the current best card to be placed on the oppponents discard pile");
+					leastDifference = currentMinDifference;
+					bestCandidate = currentBestCandidate;
+					ascOrDecFlag = localAscOrDecFlag;
 				}
 
 			}
 
-			// Rule for placement on own Descending Discard pile
-			if (diffBtwOpponentDescendingDiscardPile > 0
-					&& card.getNumber() > currentTopCardOnOpponentDescendingDiscardPile.getNumber()
-					&& card.getNumber() < (currentTopCardOnOpponentDescendingDiscardPile.getNumber()
-							+ opponentDiscardPileThreshold)) {
+			// Determine the best candidate which can be placed on the opponent discard pile
+			if (bestCandidate != null && leastDifference > 0 && ascOrDecFlag > 0) {
+				if (ascOrDecFlag == 1) {
 
-				// System.out.println("Inside Opponents Descending Discard pile");
+					logger.debug("The card" + bestCandidate
+							+ " Is the best candidate to be placced on Opponent Ascending Order Discard Pile");
+					Placement temp = cardPlacementUpdator(currentGameState, bestCandidate,
+							CardPosition.OPPONENTS_ASCENDING_DISCARD_PILE);
 
-				// System.out.println("diffBtwOpponentDescendingDiscardPile" +
-				// diffBtwOpponentDescendingDiscardPile +"currentMinDifference :" +
-				// currentMinDifference);
+					if (temp != null) {
+						cardPlacementList.add(temp);
+						currentTopCardOnOpponentAscedingDiscardPile = bestCandidate;
+						opponentCardIterator.remove();
 
-				if (diffBtwOpponentDescendingDiscardPile < currentMinDifference) {
-					currentMinDifference = diffBtwOpponentDescendingDiscardPile;
-					currentBestCandidate = card;
-					localAscOrDecFlag = 2;
-					// System.out.println("Inside Opponents asadasdasdx");
+					}
+
+				} else if (ascOrDecFlag == 2) {
+
+					logger.debug("The card" + bestCandidate
+							+ " Is the best candidate to be placced on Opponent Descending Order Discard Pile");
+					Placement temp = cardPlacementUpdator(currentGameState, bestCandidate,
+							CardPosition.OPPONENTS_DESCENDING_DISCARD_PILE);
+
+					if (temp != null) {
+						cardPlacementList.add(temp);
+						currentTopCardOnOpponentDescendingDiscardPile = bestCandidate;
+						opponentCardIterator.remove();
+					}
 				}
 
-				// System.out.println();
-
 			}
-
-			// System.out.println("current Min difference : " + currentMinDifference + "
-			// least Difference :" + leastDifference + " localAscOrDecFlag : " +
-			// localAscOrDecFlag);
-			if (currentBestCandidate != null && currentMinDifference < leastDifference && localAscOrDecFlag > 0) {
-
-				// System.out.println("Inside here");
-				leastDifference = currentMinDifference;
-				bestCandidate = currentBestCandidate;
-				ascOrDecFlag = localAscOrDecFlag;
-				// System.out.println("current Least difference : " + leastDifference + "
-				// bestCandidate :" + bestCandidate.getNumber() + " AscOrDecFlag : " +
-				// ascOrDecFlag);
-			}
-
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error(e.toString());
+			System.out.println(e);
 		}
 
-		// System.out.println("comes till here");
-
-		// System.out.println("current Least difference : " + leastDifference + "
-		// bestCandidate :" + bestCandidate.getNumber() + " AscOrDecFlag : " +
-		// ascOrDecFlag);
-		if (bestCandidate != null && leastDifference > 0 && ascOrDecFlag > 0) {
-			// System.out.println("Inside hello here");
-			if (ascOrDecFlag == 1) {
-
-				System.out.println("Inside Ascending");
-				Placement temp = cardPlacementUpdator(currentGameState, bestCandidate,
-						CardPosition.OPPONENTS_ASCENDING_DISCARD_PILE);
-
-				if (temp != null) {
-					cardPlacementList.add(temp);
-
-					// currentTopCardOnOpponentAscedingDiscardPile =
-					// (currentHandCards.indexOf(bestCandidate) >
-					// currentHandCards.indexOf(currentTopCardOnOpponentAscedingDiscardPile)) ?
-					// currentHandCards.get(currentHandCards.indexOf(bestCandidate)):
-					// currentHandCards.get(currentHandCards.indexOf(currentTopCardOnOpponentAscedingDiscardPile));
-
-				}
-
-			} else if (ascOrDecFlag == 2) {
-
-				System.out.println("Inside Descending");
-				Placement temp = cardPlacementUpdator(currentGameState, bestCandidate,
-						CardPosition.OPPONENTS_DESCENDING_DISCARD_PILE);
-
-				// System.out.println("Placement : " + temp.toString());
-
-				if (temp != null) {
-					cardPlacementList.add(temp);
-
-				}
-			}
-
-		}
-
-		for (Placement currentPlacement : cardPlacementList) {
-			if (currentHandCards.contains(currentPlacement.getCard()))
-				currentHandCards.remove(currentPlacement.getCard());
-		}
-
-		// System.out.println("Opponents placement" + cardPlacementList.toString());
+		logger.debug("End of the method : opponentCardPlacement");
+		logger.debug("===================================================================================");
 
 		return new IntermediateMoveStatus(currentGameState, currentHandCards, cardPlacementList);
 
@@ -241,170 +251,187 @@ public class InformedPlayer implements Player {
 			Card topCardOnOwnAscendingDiscardPile, Card topCardOnOwnDescendingDiscardPile,
 			int ownDiscardPileThreshold) {
 
+		logger.debug("Start of the method : ownDiscardPilesPlacement");
+
 		Card initialtopCardOnOwnAscendingDiscardPile = topCardOnOwnAscendingDiscardPile;
 		Card intialTopCardOnOwnDescendingDiscardPile = topCardOnOwnDescendingDiscardPile;
 
 		List<Placement> cardPlacementList = new ArrayList<Placement>();
 
-		// Sorting the cards in Ascending order
-		List<Card> ascedingOrderListOfCards = new ArrayList<Card>(currentHandCards);
-		ascedingOrderListOfCards.sort((Card c1, Card c2) -> c1.getNumber() - c2.getNumber());
+		if (currentHandCards.isEmpty()) {
+			return new IntermediateMoveStatus(currentGameState, currentHandCards, cardPlacementList,
+					topCardOnOwnAscendingDiscardPile, topCardOnOwnDescendingDiscardPile);
+		}
+		try {
 
-		int ownDiscardPilesAverage = Math.abs(ascedingOrderListOfCards.get(0).getNumber()
-				+ currentHandCards.get(ascedingOrderListOfCards.size() - 1).getNumber()) / 2;
+			// Sorting the cards in Ascending order
+			List<Card> ascedingOrderListOfCards = new ArrayList<Card>(currentHandCards);
+			ascedingOrderListOfCards.sort((Card c1, Card c2) -> c1.getNumber() - c2.getNumber());
 
-		/*
-		 * int ownDiscardPilesAverage =
-		 * Math.abs(topCardOnOwnAscendingDiscardPile.getNumber() +
-		 * topCardOnOwnDescendingDiscardPile.getNumber()) / 2;
-		 */
+			// Logic for checking the discard piles average
 
-		System.out.println("Own discard pile Average =" + ownDiscardPilesAverage);
+			int ownDiscardPilesAverage = ownDiscardPilesAverage = Math.abs(
+					currentHandCards.get(0).getNumber() + currentHandCards.get(currentHandCards.size() - 1).getNumber())
+					/ 2;
 
-		// For ascending order rule
-		List<Card> ascendingFilteredList = ascedingOrderListOfCards.stream()
-				.filter(s -> s.getNumber() < ownDiscardPilesAverage).collect(Collectors.toList());
+			/*
+			 * ownDiscardPilesAverage =
+			 * Math.abs(topCardOnOwnAscendingDiscardPile.getNumber() +
+			 * topCardOnOwnDescendingDiscardPile.getNumber()) / 2;
+			 */
 
-		List<Card> descendingFilteredList = ascedingOrderListOfCards.stream()
-				.filter(s -> s.getNumber() >= ownDiscardPilesAverage).collect(Collectors.toList());
-		descendingFilteredList.sort((Card c1, Card c2) -> c2.getNumber() - c1.getNumber());
+			logger.debug("Own discard pile Average =" + ownDiscardPilesAverage);
 
-		System.out.println("asceding order cards =" + ascendingFilteredList.toString());
-		System.out.println("Descending order cards =" + descendingFilteredList.toString());
+			// For ascending order rule
+			List<Card> ascendingFilteredList = ascedingOrderListOfCards.stream()
+					.filter(s -> s.getNumber() < ownDiscardPilesAverage).collect(Collectors.toList());
 
-		System.out.println("================================================================");
+			List<Card> descendingFilteredList = ascedingOrderListOfCards.stream()
+					.filter(s -> s.getNumber() >= ownDiscardPilesAverage).collect(Collectors.toList());
+			descendingFilteredList.sort((Card c1, Card c2) -> c2.getNumber() - c1.getNumber());
 
-		ListIterator<Card> ascendingListIterator = ascendingFilteredList.listIterator();
+			logger.debug("asceding order cards =" + ascendingFilteredList.toString());
+			logger.debug("Descending order cards =" + descendingFilteredList.toString());
 
-		// Rule for placement on own Ascending Discard pile
-		while (ascendingListIterator.hasNext()) {
-
-			Card previousCard;
-			Card cardProcessed;
-
-			if (ascendingListIterator.hasPrevious()) {
-				// System.out.println("previous check");
-				previousCard = ascendingListIterator.previous();
-				ascendingListIterator.next();
-				cardProcessed = ascendingListIterator.next();
-				// System.out.println("Current card = " + cardProcessed + " Previous card = "+
-				// previousCard);
-
-			} else {
-				cardProcessed = ascendingListIterator.next();
-				previousCard = cardProcessed;
-				// System.out.println("Current card = " + cardProcessed );
-			}
+			ListIterator<Card> ascendingListIterator = ascendingFilteredList.listIterator();
 
 			// Rule for placement on own Ascending Discard pile
-			if (cardProcessed.getNumber() > topCardOnOwnAscendingDiscardPile.getNumber() && cardProcessed
-					.getNumber() < (topCardOnOwnAscendingDiscardPile.getNumber() + ownDiscardPileThreshold)) {
+			while (ascendingListIterator.hasNext()) {
 
-				System.out.println("Inside Own Ascending Discard pile");
-				Placement temp = cardPlacementUpdator(currentGameState, cardProcessed,
-						CardPosition.OWN_ASCENDING_DISCARD_PILE);
+				logger.debug("Checking for placing the card on the Ascending Order Pile");
+				Card previousCard;
+				Card cardProcessed;
 
-				if (temp != null) {
-					cardPlacementList.add(temp);
-					topCardOnOwnAscendingDiscardPile = cardProcessed;
-					ascendingListIterator.remove();
-				}
-				System.out.println("Check for backward trick");
-
-				if (previousCard.is10SmallerThan(cardProcessed)) {
-					System.out.println("sadasdasdasdasdasdasdasdasd");
-					IntermediateMoveStatus backwardTrickResults = backwardsTrickValidator(currentGameState,
-							ascendingFilteredList, topCardOnOwnAscendingDiscardPile, topCardOnOwnDescendingDiscardPile);
-					currentGameState = backwardTrickResults.getGameState();
-					ascendingFilteredList = backwardTrickResults.getCurrentHandCards();
-					topCardOnOwnAscendingDiscardPile = backwardTrickResults
-							.getCurrentTopCardOnOwnAscendingDiscardPile();
-					topCardOnOwnDescendingDiscardPile = backwardTrickResults
-							.getCurrentTopCardOnOwnDescendingDiscardPile();
-					cardPlacementList.addAll(backwardTrickResults.getListOfCardPlacements());
+				if (ascendingListIterator.hasPrevious()) {
+					// System.out.println("previous check");
+					previousCard = ascendingListIterator.previous();
+					if (ascendingListIterator.hasNext()) {
+						ascendingListIterator.next();
+						cardProcessed = ascendingListIterator.next();
+					} else {
+						cardProcessed = previousCard;
+					}
 
 				} else {
-					// ascendingFilteredList.remove(cardProcessed);
+					cardProcessed = ascendingListIterator.next();
+					previousCard = cardProcessed;
+				}
+
+				logger.debug("Current card = " + cardProcessed + " Previous card = " + previousCard);
+
+				// Rule for placement on own Ascending Discard pile
+				if (cardProcessed.getNumber() > topCardOnOwnAscendingDiscardPile.getNumber() && cardProcessed
+						.getNumber() < (topCardOnOwnAscendingDiscardPile.getNumber() + ownDiscardPileThreshold)) {
+
+					logger.debug("Inside Own Ascending Discard pile");
+					Placement temp = cardPlacementUpdator(currentGameState, cardProcessed,
+							CardPosition.OWN_ASCENDING_DISCARD_PILE);
+
+					if (temp != null) {
+						cardPlacementList.add(temp);
+						topCardOnOwnAscendingDiscardPile = cardProcessed;
+						ascendingListIterator.remove();
+					}
+					if (previousCard.is10SmallerThan(topCardOnOwnAscendingDiscardPile)) {
+						logger.debug("The current card " + previousCard + " is 10 lesser than the current top card "
+								+ topCardOnOwnAscendingDiscardPile + " on the Ascending order file");
+
+						temp = cardPlacementUpdator(currentGameState, previousCard,
+								CardPosition.OWN_ASCENDING_DISCARD_PILE);
+
+						if (temp != null) {
+							cardPlacementList.add(temp);
+							topCardOnOwnAscendingDiscardPile = previousCard;
+							ascendingFilteredList.remove(previousCard);
+						}
+
+					}
+
 				}
 
 			}
 
-		}
-
-		System.out.println("#####################################################################");
-
-		// Rule for placement on own Descending Discard pile
-		ListIterator<Card> descendingListIterator = descendingFilteredList.listIterator();
-		while (descendingListIterator.hasNext()) {
-
-			Card previousCard;
-			Card cardProcessed;
-
-			if (descendingListIterator.hasPrevious()) {
-				// System.out.println("previous check");
-				previousCard = descendingListIterator.previous();
-				descendingListIterator.next();
-				cardProcessed = descendingListIterator.next();
-				// System.out.println("Current card = " + cardProcessed + " Previous card = "+
-				// previousCard);
-
-			} else {
-				cardProcessed = descendingListIterator.next();
-				previousCard = cardProcessed;
-				// System.out.println("Current card = " + cardProcessed );
-			}
-
+			logger.debug("#####################################################################");
 			// Rule for placement on own Descending Discard pile
-			if (cardProcessed.getNumber() < topCardOnOwnDescendingDiscardPile.getNumber() && cardProcessed
-					.getNumber() > (topCardOnOwnDescendingDiscardPile.getNumber() - ownDiscardPileThreshold)) {
+			ListIterator<Card> descendingListIterator = descendingFilteredList.listIterator();
+			while (descendingListIterator.hasNext()) {
 
-				System.out.println("Inside Own Descending Discard pile");
+				logger.debug("Checking for placing the card on the Descending Order Pile");
 
-				Placement temp = cardPlacementUpdator(currentGameState, cardProcessed,
-						CardPosition.OWN_DESCENDING_DISCARD_PILE);
+				Card previousCard;
+				Card cardProcessed;
 
-				if (temp != null) {
-					cardPlacementList.add(temp);
-					topCardOnOwnDescendingDiscardPile = cardProcessed;
-					descendingListIterator.remove();
-					// descendingOrderListOfCards.remove(card);
-				}
-				System.out.println("Check for backward trick");
-
-				if (previousCard.is10LargerThan(cardProcessed)) {
-					System.out.println("sadasdasdasdasdasdasdasdasd");
-					IntermediateMoveStatus backwardTrickResults = backwardsTrickValidator(currentGameState,
-							descendingFilteredList, topCardOnOwnAscendingDiscardPile,
-							topCardOnOwnDescendingDiscardPile);
-					currentGameState = backwardTrickResults.getGameState();
-					descendingFilteredList = backwardTrickResults.getCurrentHandCards();
-					topCardOnOwnAscendingDiscardPile = backwardTrickResults
-							.getCurrentTopCardOnOwnAscendingDiscardPile();
-					topCardOnOwnDescendingDiscardPile = backwardTrickResults
-							.getCurrentTopCardOnOwnDescendingDiscardPile();
-					cardPlacementList.addAll(backwardTrickResults.getListOfCardPlacements());
-					descendingFilteredList.remove(cardProcessed);
+				if (descendingListIterator.hasPrevious()) {
+					previousCard = descendingListIterator.previous();
+					if (descendingListIterator.hasNext()) {
+						descendingListIterator.next();
+						cardProcessed = descendingListIterator.next();
+					} else {
+						cardProcessed = previousCard;
+					}
 
 				} else {
-					// descendingFilteredList.remove(cardProcessed);
+					cardProcessed = descendingListIterator.next();
+					previousCard = cardProcessed;
+				}
+				logger.debug("Current card = " + cardProcessed + " Previous card = " + previousCard);
+
+				// Rule for placement on own Descending Discard pile
+				if (cardProcessed.getNumber() < topCardOnOwnDescendingDiscardPile.getNumber() && cardProcessed
+						.getNumber() > (topCardOnOwnDescendingDiscardPile.getNumber() - ownDiscardPileThreshold)) {
+
+					logger.debug("Inside Own Descending Discard pile");
+
+					Placement temp = cardPlacementUpdator(currentGameState, cardProcessed,
+							CardPosition.OWN_DESCENDING_DISCARD_PILE);
+
+					if (temp != null) {
+						cardPlacementList.add(temp);
+						topCardOnOwnDescendingDiscardPile = cardProcessed;
+						descendingListIterator.remove();
+						// descendingOrderListOfCards.remove(card);
+					}
+					if (previousCard.is10LargerThan(topCardOnOwnDescendingDiscardPile)) {
+						logger.debug("The current card " + previousCard + "is 10 greater than the current top card "
+								+ topCardOnOwnDescendingDiscardPile + " on the Descending order file");
+						temp = cardPlacementUpdator(currentGameState, previousCard,
+								CardPosition.OWN_DESCENDING_DISCARD_PILE);
+
+						if (temp != null) {
+							cardPlacementList.add(temp);
+							topCardOnOwnDescendingDiscardPile = previousCard;
+							descendingFilteredList.remove(previousCard);
+						}
+
+					}
+
 				}
 
 			}
 
+			List<Card> remainCardListAfterProcessing = new ArrayList<Card>(ascendingFilteredList);
+			remainCardListAfterProcessing.addAll(descendingFilteredList);
+
+			logger.debug("End of the method : opponentCardPlacement");
+			logger.debug("===================================================================================");
+
+			return new IntermediateMoveStatus(currentGameState, remainCardListAfterProcessing, cardPlacementList,
+					topCardOnOwnAscendingDiscardPile, topCardOnOwnDescendingDiscardPile);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error(e.toString());
+			System.out.println(e);
 		}
 
-		System.out.println("#####################################################################");
-
-		List<Card> remainCardListAfterProcessing = new ArrayList<Card>(ascendingFilteredList);
-		remainCardListAfterProcessing.addAll(descendingFilteredList);
-
-		return new IntermediateMoveStatus(currentGameState, remainCardListAfterProcessing, cardPlacementList,
+		return new IntermediateMoveStatus(currentGameState, currentHandCards, cardPlacementList,
 				topCardOnOwnAscendingDiscardPile, topCardOnOwnDescendingDiscardPile);
 
 	}
 
 	private List<Placement> getCardPlacement(GameState gameState) {
 
+		logger.debug("Start of the method : getCardPlacement");
 		List<Placement> placementsOfMove = new ArrayList<Placement>();
 
 		// Fetching the details of the current game state
@@ -414,22 +441,21 @@ public class InformedPlayer implements Player {
 		Card topCardOnOpponentAscendingDiscardPile = gameState.getTopCardOnOpponentsAscendingDiscardPile();
 		Card topCardOnOpponentDescendingDiscardPile = gameState.getTopCardOnOpponentsDescendingDiscardPile();
 
-		System.out.println(
+		logger.debug(
 				"Own game state : topCardOnOwnAscendingDiscardPile = " + topCardOnOwnAscendingDiscardPile.getNumber()
 						+ " , topCardOnOwnDescendingDiscardPile = " + topCardOnOwnDescendingDiscardPile.getNumber());
-		System.out.println("Opponents game state : topCardOnOpponentAscendingDiscardPile = "
+		logger.debug("Opponents game state : topCardOnOpponentAscendingDiscardPile = "
 				+ gameState.getTopCardOnOpponentsAscendingDiscardPile().getNumber()
 				+ " , topCardOnOpponentDescendingDiscardPile = "
 				+ gameState.getTopCardOnOpponentsDescendingDiscardPile().getNumber());
+		logger.debug("Intial Own DiscardPileThreshold : " + ownDiscardPileThreshold
+				+ " And Opponent Discard Pile Threshold : " + opponentDiscardPileThreshold);
 
 		// Copy into a different list as the source list is an immutable list
 		List<Card> orderedCurrentHandCards = new ArrayList<Card>(gameState.getHandCards());
 
 		// Sorting the cards in Ascending order
 		orderedCurrentHandCards.sort((Card c1, Card c2) -> c1.getNumber() - c2.getNumber());
-
-		Card smallest = orderedCurrentHandCards.get(0);
-		Card largest = orderedCurrentHandCards.get(orderedCurrentHandCards.size() - 1);
 
 		//// Real Logic starts here.
 
@@ -442,13 +468,10 @@ public class InformedPlayer implements Player {
 
 		// Test for Placement on Opponents Discard Pile -- End
 
-		// System.out.println("Hand cards: " + orderedCurrentHandCards.toString());
-
 		int counter = 0;
 
 		while (placementsOfMove.size() <= 3) {
 
-			// System.out.println("Loop counter:" + counter);
 			// Test for Backwards Trick -- Start
 			IntermediateMoveStatus backwardTrickResults = backwardsTrickValidator(gameState, orderedCurrentHandCards,
 					topCardOnOwnAscendingDiscardPile, topCardOnOwnDescendingDiscardPile);
@@ -476,16 +499,16 @@ public class InformedPlayer implements Player {
 
 			if (placementsOfMove.size() <= 2) {
 				ownDiscardPileThreshold = ownDiscardPileThreshold + ownDiscardPileIncreamentFactor;
-				System.out.println("DiscardPileThreshold :" + ownDiscardPileThreshold);
+				logger.debug("Updated Own DiscardPileThreshold :" + ownDiscardPileThreshold);
 			}
 
-			if (counter >= 7)
+			if (counter >= 6)
 				break;
 
 		}
 
-		System.out.print(" Placements= ");
-		placementsOfMove.forEach(System.out::print);
+		logger.debug("End of the method : getCardPlacement");
+		logger.debug("===================================================================================");
 
 		return placementsOfMove;
 
