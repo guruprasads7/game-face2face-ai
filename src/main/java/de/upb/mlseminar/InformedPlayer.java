@@ -16,31 +16,29 @@ import de.upb.isml.thegamef2f.engine.Placement;
 import de.upb.isml.thegamef2f.engine.board.Card;
 import de.upb.isml.thegamef2f.engine.player.Player;
 
-public class InformedPlayer implements Player {
+public class InformedPlayer {
 
 	private Random random;
 	private String name;
 
-	private int ownDiscardPileThreshold = 5;
-	private int ownDiscardPileIncreamentFactor = 3;
-	private final int opponentDiscardPileThreshold = 10;
+	private int ownDiscardPileThreshold ;
+	private int ownDiscardPileIncreamentFactor;
+	private int opponentDiscardPileThreshold;
+	private int minNumOfPlacements;
 
 	private static final Logger logger = LoggerFactory.getLogger(InformedPlayer.class);
 
-	public InformedPlayer(String name) {
+	public InformedPlayer(String name, int ownDiscardPileThreshold, int ownDiscardPileIncreamentFactor,
+			int opponentDiscardPileThreshold, int minNumOfPlacements) {
+		super();
 		this.name = name;
+		this.ownDiscardPileThreshold = ownDiscardPileThreshold;
+		this.ownDiscardPileIncreamentFactor = ownDiscardPileIncreamentFactor;
+		this.opponentDiscardPileThreshold = opponentDiscardPileThreshold;
+		this.minNumOfPlacements = minNumOfPlacements;
 	}
 
-	@Override
-	public void initialize(long randomSeed) {
-		this.random = new Random(randomSeed);
 
-	}
-
-	@Override
-	public String toString() {
-		return "random_player_" + name;
-	}
 
 	private Placement cardPlacementUpdator(GameState currentGameState, Card card, CardPosition position) {
 
@@ -429,7 +427,7 @@ public class InformedPlayer implements Player {
 
 	}
 
-	private List<Placement> getCardPlacement(GameState gameState) {
+	public List<Placement> getCardPlacement(GameState gameState) {
 
 		logger.debug("Start of the method : getCardPlacement");
 		List<Placement> placementsOfMove = new ArrayList<Placement>();
@@ -470,7 +468,7 @@ public class InformedPlayer implements Player {
 
 		int counter = 0;
 
-		while (placementsOfMove.size() <= 3) {
+		while (placementsOfMove.size() <= minNumOfPlacements) {
 
 			// Test for Backwards Trick -- Start
 			IntermediateMoveStatus backwardTrickResults = backwardsTrickValidator(gameState, orderedCurrentHandCards,
@@ -512,24 +510,6 @@ public class InformedPlayer implements Player {
 
 		return placementsOfMove;
 
-	}
-
-	@Override
-	public Move computeMove(GameState gameState) {
-		GameState currentGameState = gameState;
-		boolean placedOnOpponentsPiles = false;
-
-		List<Placement> placementsOfMove = new ArrayList<Placement>();
-
-		System.out.println("Player playing the game : " + getName());
-
-		System.out.println("Game state is : " + currentGameState.getHandCards().toString());
-		System.out.println("------------------------------------------------------");
-
-		placementsOfMove = getCardPlacement(currentGameState);
-
-		System.out.println("#########################################\n");
-		return new Move(placementsOfMove);
 	}
 
 	private GameState computeNewGameStateAfterPlacement(GameState gameStatePriorToPlacement, Placement placement) {
@@ -590,9 +570,5 @@ public class InformedPlayer implements Player {
 		return gameState.getTopCardOnOpponentsDescendingDiscardPile().isSmallerThan(card);
 	}
 
-	@Override
-	public String getName() {
-		return toString();
-	}
 
 }

@@ -13,8 +13,8 @@ public class RunGameInformed {
 		
 		int numPlayerAWins=0;
 		int numPlayerBWins=0;
-		for (int i=0; i < 1000000; i = i + 10000) {
-			Player playerA = new InformedPlayer("a");
+		for (int i=0; i < 1; i = i + 1) {
+			Player playerA = new InformedPlayerOrchestrator("a");
 			Player playerB = new RandomPlayer("b");
 			Game game = new Game(playerA, playerB,i);
 			Player winner = game.simulate();
