@@ -1,4 +1,4 @@
-package de.upb.mlseminar;
+package de.upb.mlseminar.informedplayer;
 
 import java.util.ArrayList;
 import java.util.List;

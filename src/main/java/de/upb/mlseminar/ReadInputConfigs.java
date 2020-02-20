@@ -12,6 +12,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.upb.mlseminar.informedplayer.InformedPlayerOrchestrator;
+
 public class ReadInputConfigs {
 
 	private static final Logger logger = LoggerFactory.getLogger(InformedPlayerOrchestrator.class);
