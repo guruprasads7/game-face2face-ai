@@ -1,8 +1,15 @@
 package de.upb.mlseminar;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +24,7 @@ public class InformedPlayerOrchestrator implements Player {
 	private Random random;
 	private String name;
 	private static final Logger logger = LoggerFactory.getLogger(InformedPlayerOrchestrator.class);
+	private final String configFile = "runConfigs.txt";
 	
 	@Override
 	public void initialize(long randomSeed) {
@@ -36,23 +44,51 @@ public class InformedPlayerOrchestrator implements Player {
 
 	@Override
 	public Move computeMove(GameState gameState) {
+		
+		logger.debug("Start of the method : computeMove");
 		GameState currentGameState = gameState;
 
-		List<Placement> placementsOfMove = new ArrayList<Placement>();
+		List<Placement> placements = new ArrayList<Placement>();
+		List<List<Placement>> listOfPlacements = new ArrayList<List<Placement>>();
+		List<Placement> bestMove = new ArrayList<Placement>();
+		Random rand = new Random();
+		
+		List<List<String>> runConfigs = ReadInputConfigs.readConfigFile(configFile);
+		for (List<String> config : runConfigs) {
+			int ownDiscardPileThreshold = Integer.parseInt(config.get(0));
+			int ownDiscardPileIncreamentFactor = Integer.parseInt(config.get(0));
+			int opponentDiscardPileThreshold = Integer.parseInt(config.get(0));
+			int minNumOfPlacements = Integer.parseInt(config.get(0));
+			
+			logger.debug("Player playing the game : " + getName());
+			logger.debug("Game state is : " + currentGameState.getHandCards().toString());
+			
+			InformedPlayer instance1 = new InformedPlayer(name, ownDiscardPileThreshold, ownDiscardPileIncreamentFactor, opponentDiscardPileThreshold, minNumOfPlacements);
+			placements = instance1.getCardPlacement(currentGameState);
+			
+			listOfPlacements.add(placements);
+			
+		}
+		
+		logger.info("List of possible moves are =");
+		listOfPlacements.forEach(System.out::println);
+		
+		int randomElementIndex
+		  = ThreadLocalRandom.current().nextInt(listOfPlacements.size()) % listOfPlacements.size();
 
-		logger.debug("Player playing the game : " + getName());
-		logger.debug("Game state is : " + currentGameState.getHandCards().toString());
-
-		InformedPlayer instance1 = new InformedPlayer(name, 3, 3, 10,3);
-		placementsOfMove = instance1.getCardPlacement(currentGameState);
-
-		System.out.println("#########################################\n");
-		return new Move(placementsOfMove);
+		logger.info("RandomElementIndex :" + randomElementIndex);
+		
+		bestMove = listOfPlacements.get(randomElementIndex);
+		logger.info("Best Move :" + bestMove.toString());
+		
+		return new Move(bestMove);
 	}
 	
 	@Override
 	public String getName() {
 		return toString();
 	}
+
+
 	
 }

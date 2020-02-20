@@ -1,0 +1,5 @@
+#ownDiscardPileThreshold,ownDiscardPileIncreamentFactor,opponentDiscardPileThreshold,minNumOfPlacements
+3,3,10,3
+5,3,5,3
+3,5,10,3
+3,5,20,2
