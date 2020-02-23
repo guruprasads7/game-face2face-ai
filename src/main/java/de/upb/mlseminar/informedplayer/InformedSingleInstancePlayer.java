@@ -16,7 +16,7 @@ import de.upb.isml.thegamef2f.engine.Placement;
 import de.upb.isml.thegamef2f.engine.board.Card;
 import de.upb.isml.thegamef2f.engine.player.Player;
 
-public class InformedPlayer {
+public class InformedSingleInstancePlayer {
 
 	private Random random;
 	private String name;
@@ -26,9 +26,9 @@ public class InformedPlayer {
 	private int opponentDiscardPileThreshold;
 	private int minNumOfPlacements;
 
-	private static final Logger logger = LoggerFactory.getLogger(InformedPlayer.class);
+	private static final Logger logger = LoggerFactory.getLogger(InformedSingleInstancePlayer.class);
 
-	public InformedPlayer(String name, int ownDiscardPileThreshold, int ownDiscardPileIncreamentFactor,
+	public InformedSingleInstancePlayer(String name, int ownDiscardPileThreshold, int ownDiscardPileIncreamentFactor,
 			int opponentDiscardPileThreshold, int minNumOfPlacements) {
 		super();
 		this.name = name;
@@ -516,22 +516,32 @@ public class InformedPlayer {
 		List<Card> handCards = new ArrayList<>(gameStatePriorToPlacement.getHandCards());
 		handCards.remove(placement.getCard());
 
-		Card topCardOnOwnAscendingDiscardPile = placement.getPosition() == CardPosition.OWN_ASCENDING_DISCARD_PILE
-				? placement.getCard()
-				: gameStatePriorToPlacement.getTopCardOnOwnAscendingDiscardPile();
-		Card topCardOnOwnDescendingDiscardPile = placement.getPosition() == CardPosition.OWN_DESCENDING_DISCARD_PILE
-				? placement.getCard()
-				: gameStatePriorToPlacement.getTopCardOnOwnDescendingDiscardPile();
+		List<Card> cardsOnOwnAscendingDiscardPile = new ArrayList<>(
+				gameStatePriorToPlacement.getCardsOnOwnAscendingDiscardPile());
+		if (placement.getPosition() == CardPosition.OWN_ASCENDING_DISCARD_PILE) {
+			cardsOnOwnAscendingDiscardPile.add(placement.getCard());
+		}
 
-		Card topCardOnOpponentsAscendingDiscardPile = placement
-				.getPosition() == CardPosition.OPPONENTS_ASCENDING_DISCARD_PILE ? placement.getCard()
-						: gameStatePriorToPlacement.getTopCardOnOpponentsAscendingDiscardPile();
-		Card topCardOnOpponentsDescendingDiscardPile = placement
-				.getPosition() == CardPosition.OPPONENTS_DESCENDING_DISCARD_PILE ? placement.getCard()
-						: gameStatePriorToPlacement.getTopCardOnOpponentsDescendingDiscardPile();
+		List<Card> cardsOnOwnDescendingDiscardPile = new ArrayList<>(
+				gameStatePriorToPlacement.getCardsOnOwnDescendingDiscardPile());
+		if (placement.getPosition() == CardPosition.OWN_DESCENDING_DISCARD_PILE) {
+			cardsOnOwnDescendingDiscardPile.add(placement.getCard());
+		}
 
-		return new GameState(handCards, topCardOnOwnAscendingDiscardPile, topCardOnOwnDescendingDiscardPile,
-				topCardOnOpponentsAscendingDiscardPile, topCardOnOpponentsDescendingDiscardPile);
+		List<Card> cardsOnOpponentsAscendingDiscardPile = new ArrayList<>(
+				gameStatePriorToPlacement.getCardsOnOpponentsAscendingDiscardPile());
+		if (placement.getPosition() == CardPosition.OPPONENTS_ASCENDING_DISCARD_PILE) {
+			cardsOnOpponentsAscendingDiscardPile.add(placement.getCard());
+		}
+
+		List<Card> cardsOnOpponentsDescendingDiscardPile = new ArrayList<>(
+				gameStatePriorToPlacement.getCardsOnOpponentsDescendingDiscardPile());
+		if (placement.getPosition() == CardPosition.OPPONENTS_ASCENDING_DISCARD_PILE) {
+			cardsOnOpponentsDescendingDiscardPile.add(placement.getCard());
+		}
+
+		return new GameState(handCards, cardsOnOwnAscendingDiscardPile, cardsOnOwnDescendingDiscardPile,
+				cardsOnOpponentsAscendingDiscardPile, cardsOnOpponentsDescendingDiscardPile);
 	}
 
 	private boolean isPlacementValid(Placement placement, GameState gameState, boolean placingOnOpponentPilesAllowed) {
