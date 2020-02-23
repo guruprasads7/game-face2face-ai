@@ -9,7 +9,6 @@ import de.upb.isml.thegamef2f.engine.board.Card;
 
 public class IntermediateGameState {
 
-	private GameState gameState;
 	private List<Card> currentHandCards;
 	private List<Placement> listOfCardPlacements = new ArrayList<Placement>();
 	private Card currentTopCardOnOwnAscendingDiscardPile;
@@ -17,10 +16,7 @@ public class IntermediateGameState {
 	private Card currentTopCardOnOpponentAscendingDiscardPile;
 	private Card currentTopCardOnOpponentDescendingDiscardPile;
 
-	public IntermediateGameState(GameState gameState) {
-		super();
-		this.gameState = gameState;
-	}
+
 
 	public IntermediateGameState() {
 		super();
@@ -30,7 +26,6 @@ public class IntermediateGameState {
 			Card currentTopCardOnOwnAscendingDiscardPile, Card currentTopCardOnOwnDescendingDiscardPile,
 			Card currentTopCardOnOpponentAscendingDiscardPile, Card currentTopCardOnOpponentDescendingDiscardPile) {
 		super();
-		this.gameState = gameState;
 		this.currentHandCards = currentHandCards;
 		this.listOfCardPlacements = listOfCardPlacements;
 		this.currentTopCardOnOwnAscendingDiscardPile = currentTopCardOnOwnAscendingDiscardPile;
@@ -42,7 +37,6 @@ public class IntermediateGameState {
 	public IntermediateGameState(GameState gameState, List<Card> currentHandCards,
 			List<Placement> listOfCardPlacements) {
 		super();
-		this.gameState = gameState;
 		this.currentHandCards = currentHandCards;
 		this.listOfCardPlacements = listOfCardPlacements;
 	}
@@ -69,14 +63,6 @@ public class IntermediateGameState {
 
 	public void setListOfCardPlacements(List<Placement> listOfCardPlacements) {
 		this.listOfCardPlacements = listOfCardPlacements;
-	}
-
-	public GameState getGameState() {
-		return gameState;
-	}
-
-	public void setGameState(GameState gameState) {
-		this.gameState = gameState;
 	}
 
 	public Card getCurrentTopCardOnOwnAscendingDiscardPile() {
@@ -113,12 +99,12 @@ public class IntermediateGameState {
 
 	@Override
 	public String toString() {
-		return "IntermediateGameState [currentHandCards=" + currentHandCards + ", listOfCardPlacements="
-				+ listOfCardPlacements + ", currentTopCardOnOwnAscendingDiscardPile="
+		return "IntermediateGameState [currentHandCards=" + currentHandCards + ", currentTopCardOnOwnAscendingDiscardPile="
 				+ currentTopCardOnOwnAscendingDiscardPile + ", currentTopCardOnOwnDescendingDiscardPile="
 				+ currentTopCardOnOwnDescendingDiscardPile + ", currentTopCardOnOpponentAscendingDiscardPile="
 				+ currentTopCardOnOpponentAscendingDiscardPile + ", currentTopCardOnOpponentDescendingDiscardPile="
-				+ currentTopCardOnOpponentDescendingDiscardPile + "]";
+				+ currentTopCardOnOpponentDescendingDiscardPile + ", listOfCardPlacements="
+						+ listOfCardPlacements + "]";
 	}
 
 }
