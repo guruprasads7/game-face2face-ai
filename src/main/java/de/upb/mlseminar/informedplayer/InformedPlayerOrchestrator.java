@@ -18,6 +18,7 @@ import ch.qos.logback.core.db.dialect.MySQLDialect;
 import de.upb.isml.thegamef2f.engine.GameState;
 import de.upb.isml.thegamef2f.engine.Move;
 import de.upb.isml.thegamef2f.engine.Placement;
+import de.upb.isml.thegamef2f.engine.board.Card;
 import de.upb.isml.thegamef2f.engine.player.Player;
 import de.upb.mlseminar.ReadInputConfigs;
 
@@ -60,7 +61,25 @@ public class InformedPlayerOrchestrator implements Player {
 		List<List<Placement>> listOfPlacements = new ArrayList<List<Placement>>();
 		List<Placement> bestMove = new ArrayList<Placement>();
 		
+		// Normal Game call
+		InformedSingleInstancePlayer instance = new InformedSingleInstancePlayer(name, 3, 5, 10, 3);
+		placements = instance.getCardPlacement(currentGameState);
+		
+		logger.info("List of possible moves from InformedSingleInstancePlayer are =");
+		placements.forEach(System.out::println);
+		
+		// Game Call for the new IntermediateGameState
+		IntermediateGameState intermediateGameState = constructIntermediateGameState(currentGameState);
+		InformedPlayerInstance informedPlayerInstance = new InformedPlayerInstance(name, 3, 5, 10, 3);
+		
+		intermediateGameState = informedPlayerInstance.getCardPlacement(intermediateGameState);
+		logger.info("List of possible moves from InformedPlayerInstance are =");
+		intermediateGameState.getListOfCardPlacements().forEach(System.out::println);
+		
+		
 		constructRootTree(currentGameState);
+		
+		
 		System.exit(-1);
 		
 		List<List<String>> runConfigs = ReadInputConfigs.readConfigFile(configFile);
@@ -73,15 +92,15 @@ public class InformedPlayerOrchestrator implements Player {
 			logger.debug("Player playing the game : " + getName());
 			logger.debug("Game state is : " + currentGameState.getHandCards().toString());
 			
-			InformedPlayer instance1 = new InformedPlayer(name, ownDiscardPileThreshold, ownDiscardPileIncreamentFactor, opponentDiscardPileThreshold, minNumOfPlacements);
+			InformedSingleInstancePlayer instance1 = new InformedSingleInstancePlayer(name, ownDiscardPileThreshold, ownDiscardPileIncreamentFactor, opponentDiscardPileThreshold, minNumOfPlacements);
 			placements = instance1.getCardPlacement(currentGameState);
 			
 			listOfPlacements.add(placements);
 			
 		}
 		
-		//logger.info("List of possible moves are =");
-		//listOfPlacements.forEach(System.out::println);
+		logger.info("List of possible moves are =");
+		listOfPlacements.forEach(System.out::println);
 		
 		int randomElementIndex
 		  = ThreadLocalRandom.current().nextInt(listOfPlacements.size()) % listOfPlacements.size();
@@ -89,7 +108,7 @@ public class InformedPlayerOrchestrator implements Player {
 		//logger.info("RandomElementIndex :" + randomElementIndex);
 		
 		bestMove = listOfPlacements.get(randomElementIndex);
-		//logger.info("Best Move :" + bestMove.toString());
+		logger.info("Best Move :" + bestMove.toString());
 		
 		return new Move(bestMove);
 	}
@@ -113,6 +132,8 @@ public class InformedPlayerOrchestrator implements Player {
         
         System.out.println("Promising Node : " + promisingNode.getState().getGameState().toString());
         
+        expandNode(rootNode, gameState);
+        
 	}
 	
     private MCTSNode selectPromisingNode(MCTSNode rootNode) {
@@ -123,6 +144,27 @@ public class InformedPlayerOrchestrator implements Player {
         return node;
     }
 
+    private void expandNode(MCTSNode node,GameState gameState) {
+    	
+        List<Placement> placements = new ArrayList<Placement>();
+        InformedSingleInstancePlayer instance1 = new InformedSingleInstancePlayer(name, 3, 3, 10, 3);
+        placements = instance1.getCardPlacement(gameState);
+        
+        IntermediateGameState intermediateGameState = constructIntermediateGameState(gameState);
+        intermediateGameState.setListOfCardPlacements(placements);
+        NodeState nodeState = new NodeState(intermediateGameState);
+        MCTSNode newNode = new MCTSNode(nodeState);
+        
+        newNode.setParent(node);
+        node.getChildArray().add(newNode);
+        
+        System.out.println("Child Node : " + newNode.getState().getGameState().toString());
+        MCTSNode parent = newNode.getParent();
+        System.out.println("Parent Node : " + parent.getState().getGameState().toString());
+        //System.out.println("list of children" + node.getChildArray().toString());
+    	
+    }
+    
     /*
     private void expandNode(Node node) {
         List<State> possibleStates = node.getState().getAllPossibleStates();
@@ -166,10 +208,10 @@ public class InformedPlayerOrchestrator implements Player {
 	private IntermediateGameState constructIntermediateGameState(GameState gameState) {
 		
 		IntermediateGameState intermediateGameState = new IntermediateGameState();
-		
-        intermediateGameState.setCurrentHandCards(gameState.getHandCards());
+		// Copy into a different list as the source list is an immutable list
+        intermediateGameState.setCurrentHandCards(new ArrayList<Card>(gameState.getHandCards()));
         intermediateGameState.setGameState(gameState);
-        intermediateGameState.setListOfCardPlacements(null);
+        intermediateGameState.setListOfCardPlacements(new ArrayList<Placement>());
         intermediateGameState.setCurrentTopCardOnOpponentAscendingDiscardPile(gameState.getTopCardOnOpponentsAscendingDiscardPile());
         intermediateGameState.setCurrentTopCardOnOpponentDescendingDiscardPile(gameState.getTopCardOnOpponentsDescendingDiscardPile());
         intermediateGameState.setCurrentTopCardOnOwnAscendingDiscardPile(gameState.getTopCardOnOwnAscendingDiscardPile());
