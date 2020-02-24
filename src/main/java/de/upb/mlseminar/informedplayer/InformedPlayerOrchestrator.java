@@ -19,11 +19,14 @@ import de.upb.isml.thegamef2f.engine.GameState;
 import de.upb.isml.thegamef2f.engine.Move;
 import de.upb.isml.thegamef2f.engine.Placement;
 import de.upb.isml.thegamef2f.engine.board.Card;
+import de.upb.isml.thegamef2f.engine.board.Game;
 import de.upb.isml.thegamef2f.engine.player.Player;
+import de.upb.isml.thegamef2f.engine.player.RandomPlayer;
 import de.upb.mlseminar.ReadInputConfigs;
 
 import de.upb.mlseminar.mymcts.montecarlo.UCT;
 import de.upb.mlseminar.mcts.montecarlo.State;
+import de.upb.mlseminar.mcts.tictactoe.Board;
 import de.upb.mlseminar.mcts.tree.Node;
 import de.upb.mlseminar.mymcts.tree.MCTSNode;
 import de.upb.mlseminar.mymcts.tree.MCTSTree;
@@ -31,13 +34,16 @@ import de.upb.mlseminar.mymcts.tree.MCTSTree;
 public class InformedPlayerOrchestrator implements Player {
 	
 	private Random random;
+	private long randomSeed;
 	private String name;
 	private static final Logger logger = LoggerFactory.getLogger(InformedPlayerOrchestrator.class);
 	private final String configFile = "runConfigs.txt";
+	private static final int WIN_SCORE = 10;
 	
 	@Override
 	public void initialize(long randomSeed) {
 		this.random = new Random(randomSeed);
+		this.randomSeed = randomSeed;
 
 	}
 
@@ -128,10 +134,28 @@ public class InformedPlayerOrchestrator implements Player {
         rootNode.getState().setVisitCount(0);
         rootNode.getState().setWinScore(0);
         
+        // Phase 1 - Selection
         MCTSNode promisingNode = selectPromisingNode(rootNode);
         
-        System.out.println("Promising Node : " + promisingNode.getState().getGameState().toString());
+        logger.info("Promising Node : " + promisingNode.getState().getGameState().toString());
+        // Phase 2 - Expansion
         expandNode(rootNode, rootstate);
+        
+        // Phase 3 - Simulation
+        MCTSNode nodeToExplore = promisingNode;
+        if (promisingNode.getChildArray().size() > 0) {
+            nodeToExplore = promisingNode.getRandomChildNode();
+        }
+        logger.info("Node chosen for simulation : " + nodeToExplore.getState().getGameState().toString());
+        int playoutResult = simulateRandomPlayout(nodeToExplore);
+        
+        backPropogation(nodeToExplore, playoutResult);
+
+        MCTSNode winnerNode = rootNode.getChildWithMaxScore();
+        System.out.println(" Winner node : " + winnerNode.getState().getGameState().toString());
+        
+        tree.setRoot(winnerNode);
+        
         
 	}
 	
@@ -144,52 +168,68 @@ public class InformedPlayerOrchestrator implements Player {
     }
 
     private void expandNode(MCTSNode node,IntermediateGameState rootState) {
-    	
-        List<Placement> placements = new ArrayList<Placement>();        
+      
         System.out.println("Parent Node at top : " + node.getState().getGameState().toString());
         
-        IntermediateGameState copiedChildState1 = constructIntermediateGameState1(rootState);
-		InformedPlayerInstance informedPlayerInstance1 = new InformedPlayerInstance(name, 10, 10, 20, 3);
-		IntermediateGameState intermediateGameState1 = informedPlayerInstance1.getCardPlacement(copiedChildState1);
-		logger.info("List of possible moves from intermediateGameState1 are =");
-		intermediateGameState1.getListOfCardPlacements().forEach(System.out::println);
-        NodeState nodeState1 = new NodeState(intermediateGameState1);
-        MCTSNode newNode1 = new MCTSNode(nodeState1);
-        newNode1.setParent(node);
-        node.getChildArray().add(newNode1);
-        System.out.println("Child Node here 2 : " + newNode1.getState().getGameState().toString());
+		List<List<String>> runConfigs = ReadInputConfigs.readConfigFile(configFile);
+		
+		for (List<String> config : runConfigs) {
+			
+			IntermediateGameState childState = null;
+			int ownDiscardPileThreshold = Integer.parseInt(config.get(0));
+			int ownDiscardPileIncreamentFactor = Integer.parseInt(config.get(1));
+			int opponentDiscardPileThreshold = Integer.parseInt(config.get(2));
+			int minNumOfPlacements = Integer.parseInt(config.get(3));
+			
+			// Construct a new gamestate for child nodes
+	        childState = createChildStates(rootState);
+      
+	        // Invoke the InformedPlayerInstance for each of the possible states
+			InformedPlayerInstance informedPlayerInstance = new InformedPlayerInstance(name, ownDiscardPileThreshold, ownDiscardPileIncreamentFactor, opponentDiscardPileThreshold, minNumOfPlacements);
+			IntermediateGameState intermediateGameState = informedPlayerInstance.getCardPlacement(childState);
+	        
+			// Create a new node and add it to the Tree
+			NodeState nodeState = new NodeState(intermediateGameState);
+	        MCTSNode newNode = new MCTSNode(nodeState);
+	        
+	        newNode.setParent(node);
+	        node.getChildArray().add(newNode);
+	        
+	        logger.info("Child Node : " + newNode.getState().getGameState().toString());
         
-        IntermediateGameState copiedChildState = constructIntermediateGameState1(rootState);
-		InformedPlayerInstance informedPlayerInstance = new InformedPlayerInstance("child1", 3, 5, 10, 3);
-		IntermediateGameState intermediateGameState = informedPlayerInstance.getCardPlacement(copiedChildState);
-		logger.info("List of possible moves from intermediateGameState are =");
-		intermediateGameState.getListOfCardPlacements().forEach(System.out::println);
-        NodeState nodeState = new NodeState(intermediateGameState);
-        MCTSNode newNode = new MCTSNode(nodeState);       
-        newNode.setParent(node);
-        node.getChildArray().add(newNode);
-        System.out.println("Child Node 1: " + newNode.getState().getGameState().toString());
-        
+		}	
+        logger.info("Parent Node childrens: " + node.getChildArray().size());
+        logger.info("Parent Node : " + node.getState().getGameState().toString());
+    }
+    
+    
+    private int simulateRandomPlayout(MCTSNode node) {
+        MCTSNode tempNode = node;
+        NodeState tempState = tempNode.getState();
+        IntermediateGameState tempIntermediateGameState = tempState.getGameState();
+        int wincount = 0;
 
-        //System.out.println("Parent Node : " + node.getState().getGameState().toString());
-        //System.out.println("list of children" + node.getChildArray().toString());
-    	
+        InformedSingleInstancePlayer playerA = new InformedSingleInstancePlayer("random", 3, 5, 10, 3);
+		Player playerB = new RandomPlayer("random");
+		Game game = new Game(playerA, playerB, randomSeed);
+		Player winner = game.simulate();
+		game.getHistory().printHistory();
+		wincount += winner == playerA ? 1 :0;
+		
+		System.out.println("Wincount" + wincount);
+        
+        return wincount;
 
-        
-        IntermediateGameState copiedChildState2 = constructIntermediateGameState1(rootState);
-		InformedPlayerInstance informedPlayerInstance2 = new InformedPlayerInstance(name, 20, 2, 20, 2);
-		IntermediateGameState intermediateGameState2 = informedPlayerInstance2.getCardPlacement(copiedChildState2);
-		logger.info("List of possible moves from intermediateGameState2 are =");
-		intermediateGameState2.getListOfCardPlacements().forEach(System.out::println);
-        NodeState nodeState2 = new NodeState(intermediateGameState2);
-        MCTSNode newNode2 = new MCTSNode(nodeState2);
-        
-        newNode2.setParent(node);
-        System.out.println("Child Node here 3: " + newNode2.getState().getGameState().toString());
-        node.getChildArray().add(newNode2);
-        
-        System.out.println("Parent Node childrens: " + node.getChildArray().size());
-        System.out.println("Parent Node : " + node.getState().getGameState().toString());
+    }
+    
+    private void backPropogation(MCTSNode nodeToExplore, double playoutResult) {
+        MCTSNode tempNode = nodeToExplore;
+        while (tempNode != null) {
+            tempNode.getState().incrementVisit();
+            if (playoutResult == 1)
+                tempNode.getState().addScore(WIN_SCORE);
+            tempNode = tempNode.getParent();
+        }
     }
     
     /*
@@ -246,7 +286,7 @@ public class InformedPlayerOrchestrator implements Player {
         return intermediateGameState;
 	}
 	
-	private IntermediateGameState constructIntermediateGameState1(IntermediateGameState gameState) {
+	private IntermediateGameState createChildStates(IntermediateGameState gameState) {
 		
 		IntermediateGameState intermediateGameState = new IntermediateGameState();
 		// Copy into a different list as the source list is an immutable list

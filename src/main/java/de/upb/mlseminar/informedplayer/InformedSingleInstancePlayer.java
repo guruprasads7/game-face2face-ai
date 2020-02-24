@@ -16,7 +16,7 @@ import de.upb.isml.thegamef2f.engine.Placement;
 import de.upb.isml.thegamef2f.engine.board.Card;
 import de.upb.isml.thegamef2f.engine.player.Player;
 
-public class InformedSingleInstancePlayer {
+public class InformedSingleInstancePlayer implements Player {
 
 	private Random random;
 	private String name;
@@ -38,7 +38,17 @@ public class InformedSingleInstancePlayer {
 		this.minNumOfPlacements = minNumOfPlacements;
 	}
 
+	@Override
+	public void initialize(long randomSeed) {
+		this.random = new Random(randomSeed);
 
+	}
+	
+	@Override
+	public String toString() {
+		return "random_player_" + name;
+	}
+	
 
 	private Placement cardPlacementUpdator(GameState currentGameState, Card card, CardPosition position) {
 
@@ -579,6 +589,24 @@ public class InformedSingleInstancePlayer {
 	private boolean canPlaceCardOnOpponentsDescendingDiscardPile(Card card, GameState gameState) {
 		return gameState.getTopCardOnOpponentsDescendingDiscardPile().isSmallerThan(card);
 	}
+
+
+
+	@Override
+	public Move computeMove(GameState gameState) {
+		
+		logger.debug("Start of the method : computeMove");
+		GameState currentGameState = gameState;
+
+		List<Placement> placements = new ArrayList<Placement>();
+		
+		InformedSingleInstancePlayer instance = new InformedSingleInstancePlayer(name, 3, 5, 10, 3);
+		placements = instance.getCardPlacement(currentGameState);
+		
+		return new Move(placements);
+		
+	}
+
 
 
 }
