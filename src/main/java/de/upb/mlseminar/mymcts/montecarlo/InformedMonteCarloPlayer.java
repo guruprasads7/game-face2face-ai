@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
@@ -24,6 +25,7 @@ import de.upb.isml.thegamef2f.engine.player.Player;
 import de.upb.isml.thegamef2f.engine.player.RandomPlayer;
 import de.upb.mlseminar.informedplayer.InformedPlayerInstance;
 import de.upb.mlseminar.informedplayer.InformedSingleInstancePlayer;
+import de.upb.mlseminar.informedplayer.TestInformedPlayerInstance;
 import de.upb.mlseminar.mcts.montecarlo.State;
 import de.upb.mlseminar.mcts.tictactoe.Board;
 import de.upb.mlseminar.mcts.tree.Node;
@@ -64,6 +66,12 @@ public class InformedMonteCarloPlayer implements Player {
 	}
 	
 	@Override
+	public String getName() {
+		return toString();
+	}
+	
+	
+	@Override
 	public Move computeMove(GameState gameState) {
 		
 		List<Placement> placements = new ArrayList<Placement>();
@@ -83,7 +91,7 @@ public class InformedMonteCarloPlayer implements Player {
 		
         int numberOfIterations = 0;
         
-        while(numberOfIterations < 5) {
+        while(numberOfIterations < 10) {
         	
         	// Phase 1 - Selection
             MCTSNode promisingNode = selectPromisingNode(rootNode);
@@ -182,11 +190,6 @@ public class InformedMonteCarloPlayer implements Player {
 	}
 	*/
 	
-	@Override
-	public String getName() {
-		return toString();
-	}
-	
 	/*
 	private void constructRootTree(GameState gameState) {
 				
@@ -224,6 +227,64 @@ public class InformedMonteCarloPlayer implements Player {
 	}
 	*/
 	
+	/*
+	@Override
+	public Move computeMove(GameState gameState) {
+		
+		List<Placement> placements = new ArrayList<Placement>();
+		
+		logger.debug("Start of the method : computeMove");
+        long start = System.currentTimeMillis();
+        long end = (start + maxTimeInterationInMilliSec);
+		
+        // Construct the root Tree
+		MCTSTree tree = new MCTSTree();
+        MCTSNode rootNode = tree.getRoot();
+        IntermediateGameState rootstate = constructIntermediateGameState(gameState);
+        
+        rootNode.getState().setGameState(rootstate);
+        rootNode.getState().setVisitCount(0);
+        rootNode.getState().setWinScore(0);
+		
+        int numberOfIterations = 0;
+        
+        	
+        	// Phase 1 - Selection
+            MCTSNode promisingNode = selectPromisingNode(rootNode);
+            
+            logger.info("Promising Node : " + promisingNode.getState().getGameState().toString());
+            // Phase 2 - Expansion
+            expandNode(rootNode, rootstate);
+            
+            // Phase 3 - Simulation
+            MCTSNode nodeToExplore = promisingNode;
+            if (promisingNode.getChildArray().size() > 0) {
+                nodeToExplore = promisingNode.getRandomChildNode();
+            }
+            logger.info("Node chosen for simulation : " + nodeToExplore.getState().getGameState().toString());
+            int playoutResult = simulateRandomPlayout(nodeToExplore);
+            
+            System.exit(-1);
+            
+            // Phase 4 - Back Propagation
+            backPropogation(nodeToExplore, playoutResult);
+            
+        
+        MCTSNode winnerNode = rootNode.getChildWithMaxScore();
+        logger.info("\n");
+        logger.info("Winner Node : " + winnerNode.getState().getGameState().toString() + "RunTime config" + winnerNode.getState().getModelInputConfig().toString());
+        placements = winnerNode.getState().getGameState().getListOfCardPlacements();
+        logger.info("Best Placement" + placements.toString());
+        
+        logger.info("--------------------------------------------------------------------------------");
+        tree.setRoot(winnerNode);
+		
+        
+		return (new Move(placements));
+	}
+
+	*/
+	
     private MCTSNode selectPromisingNode(MCTSNode rootNode) {
         MCTSNode node = rootNode;
         while (node.getChildArray().size() != 0) {
@@ -254,36 +315,47 @@ public class InformedMonteCarloPlayer implements Player {
 	        newNode.setParent(node);
 	        node.getChildArray().add(newNode);
 	        
-	        logger.info("Child Node : " + newNode.getState().getGameState().toString() + "RunTime config" + newNode.getState().getModelInputConfig().toString());
+	        //logger.info("Child Node : " + newNode.getState().getGameState().toString() + "RunTime config" + newNode.getState().getModelInputConfig().toString());
         
 		}	
-        logger.info("Parent Node childrens: " + node.getChildArray().size());
-        logger.info("Parent Node : " + node.getState().getGameState().toString());
+        //logger.info("Parent Node childrens: " + node.getChildArray().size());
+        //logger.info("Parent Node : " + node.getState().getGameState().toString());
     }
     
     
     private int simulateRandomPlayout(MCTSNode node) {
+
+    	
+    	int wincount = 0;
+    	try {
+    	
         MCTSNode tempNode = node;
         NodeState tempState = tempNode.getState();
         IntermediateGameState tempIntermediateGameState = tempState.getGameState();
-        logger.info("Random Playout Intermediate Status :" + tempIntermediateGameState.toString());
-        
+        logger.debug("Random Playout Intermediate Status :" + tempIntermediateGameState.toString());
+        logger.debug("Random Playout Run Configuration Status :" + tempState.getModelInputConfig());
         ModelInputConfig tempModelInputConfig = tempState.getModelInputConfig();
         
-        int wincount = 0;
+        
 
-        //TestInformedPlayerInstance playerA = new TestInformedPlayerInstance(name,tempIntermediateGameState,tempModelInputConfig.getOwnDiscardPileThreshold(),tempModelInputConfig.getOwnDiscardPileIncreamentFactor(),tempModelInputConfig.getOpponentDiscardPileThreshold(),tempModelInputConfig.getMinNumOfPlacements());
-		
-        InformedSingleInstancePlayer playerA = new InformedSingleInstancePlayer(name, tempModelInputConfig.getOwnDiscardPileThreshold(),tempModelInputConfig.getOwnDiscardPileIncreamentFactor(),tempModelInputConfig.getOpponentDiscardPileThreshold(),tempModelInputConfig.getMinNumOfPlacements());
+        TestInformedPlayerInstance playerA = new TestInformedPlayerInstance(name,tempIntermediateGameState,tempModelInputConfig.getOwnDiscardPileThreshold(),tempModelInputConfig.getOwnDiscardPileIncreamentFactor(),tempModelInputConfig.getOpponentDiscardPileThreshold(),tempModelInputConfig.getMinNumOfPlacements());
+        //InformedSingleInstancePlayer playerA = new InformedSingleInstancePlayer(name, tempModelInputConfig.getOwnDiscardPileThreshold(),tempModelInputConfig.getOwnDiscardPileIncreamentFactor(),tempModelInputConfig.getOpponentDiscardPileThreshold(),tempModelInputConfig.getMinNumOfPlacements());
         Player playerB = new RandomPlayer("random");
 		Game game = new Game(playerA, playerB, randomSeed);
 		Player winner = game.simulate();
+		//game.getHistory().printHistory();
 		wincount += winner == playerA ? 1 :0;
 		
 		System.out.println("Wincount" + wincount);
         
         return wincount;
-
+    	}catch (Exception e) {
+    		e.printStackTrace();
+    		logger.error(e.toString());
+    		System.out.println(e);
+    		return 0;
+    	}
+    	
     }
     
     private void backPropogation(MCTSNode nodeToExplore, int playoutResult) {
@@ -340,8 +412,8 @@ public class InformedMonteCarloPlayer implements Player {
 		
 		IntermediateGameState intermediateGameState = new IntermediateGameState();
 		// Copy into a different list as the source list is an immutable list
-        intermediateGameState.setCurrentHandCards(new ArrayList<Card>(gameState.getHandCards()));
-        intermediateGameState.setListOfCardPlacements(new ArrayList<Placement>());
+        intermediateGameState.setCurrentHandCards(Collections.synchronizedList(new ArrayList<Card>(gameState.getHandCards())));
+        intermediateGameState.setListOfCardPlacements(Collections.synchronizedList(new ArrayList<Placement>()));
         intermediateGameState.setCurrentTopCardOnOpponentAscendingDiscardPile(gameState.getTopCardOnOpponentsAscendingDiscardPile());
         intermediateGameState.setCurrentTopCardOnOpponentDescendingDiscardPile(gameState.getTopCardOnOpponentsDescendingDiscardPile());
         intermediateGameState.setCurrentTopCardOnOwnAscendingDiscardPile(gameState.getTopCardOnOwnAscendingDiscardPile());
@@ -354,8 +426,8 @@ public class InformedMonteCarloPlayer implements Player {
 		
 		IntermediateGameState intermediateGameState = new IntermediateGameState();
 		// Copy into a different list as the source list is an immutable list
-        intermediateGameState.setCurrentHandCards(new ArrayList<Card>(gameState.getCurrentHandCards()));
-        intermediateGameState.setListOfCardPlacements(new ArrayList<Placement>());
+        intermediateGameState.setCurrentHandCards(Collections.synchronizedList(new ArrayList<Card>(gameState.getCurrentHandCards())));
+        intermediateGameState.setListOfCardPlacements(Collections.synchronizedList(new ArrayList<Placement>()));
         intermediateGameState.setCurrentTopCardOnOpponentAscendingDiscardPile(gameState.getCurrentTopCardOnOpponentAscendingDiscardPile());
         intermediateGameState.setCurrentTopCardOnOpponentDescendingDiscardPile(gameState.getCurrentTopCardOnOpponentDescendingDiscardPile());
         intermediateGameState.setCurrentTopCardOnOwnAscendingDiscardPile(gameState.getCurrentTopCardOnOwnAscendingDiscardPile());

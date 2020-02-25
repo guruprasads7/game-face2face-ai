@@ -1,6 +1,7 @@
 package de.upb.mlseminar.utilities;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import de.upb.isml.thegamef2f.engine.GameState;
@@ -9,13 +10,12 @@ import de.upb.isml.thegamef2f.engine.board.Card;
 
 public class IntermediateGameState {
 
-	private List<Card> currentHandCards;
-	private List<Placement> listOfCardPlacements = new ArrayList<Placement>();
+	private List<Card> currentHandCards = Collections.synchronizedList(new ArrayList<Card>());
+	private List<Placement> listOfCardPlacements = Collections.synchronizedList(new ArrayList<Placement>());
 	private Card currentTopCardOnOwnAscendingDiscardPile;
 	private Card currentTopCardOnOwnDescendingDiscardPile;
 	private Card currentTopCardOnOpponentAscendingDiscardPile;
 	private Card currentTopCardOnOpponentDescendingDiscardPile;
-
 
 
 	public IntermediateGameState() {
