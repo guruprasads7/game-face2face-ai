@@ -15,6 +15,7 @@ import de.upb.isml.thegamef2f.engine.Move;
 import de.upb.isml.thegamef2f.engine.Placement;
 import de.upb.isml.thegamef2f.engine.board.Card;
 import de.upb.isml.thegamef2f.engine.player.Player;
+import de.upb.mlseminar.utilities.IntermediateGameState;
 
 public class InformedPlayerInstance {
 

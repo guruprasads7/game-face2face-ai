@@ -5,8 +5,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import de.upb.mlseminar.informedplayer.NodeState;
 import de.upb.mlseminar.mcts.montecarlo.State;
+import de.upb.mlseminar.utilities.NodeState;
 
 public class MCTSNode {
 

@@ -1,4 +1,4 @@
-package de.upb.mlseminar.informedplayer;
+package de.upb.mlseminar.mymcts.montecarlo;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -22,21 +22,24 @@ import de.upb.isml.thegamef2f.engine.board.Card;
 import de.upb.isml.thegamef2f.engine.board.Game;
 import de.upb.isml.thegamef2f.engine.player.Player;
 import de.upb.isml.thegamef2f.engine.player.RandomPlayer;
-import de.upb.mlseminar.ReadInputConfigs;
-
-import de.upb.mlseminar.mymcts.montecarlo.UCT;
+import de.upb.mlseminar.informedplayer.InformedPlayerInstance;
+import de.upb.mlseminar.informedplayer.InformedSingleInstancePlayer;
 import de.upb.mlseminar.mcts.montecarlo.State;
 import de.upb.mlseminar.mcts.tictactoe.Board;
 import de.upb.mlseminar.mcts.tree.Node;
 import de.upb.mlseminar.mymcts.tree.MCTSNode;
 import de.upb.mlseminar.mymcts.tree.MCTSTree;
+import de.upb.mlseminar.utilities.IntermediateGameState;
+import de.upb.mlseminar.utilities.ModelInputConfig;
+import de.upb.mlseminar.utilities.NodeState;
+import de.upb.mlseminar.utilities.ReadInputConfigs;
 
-public class InformedPlayerOrchestrator implements Player {
+public class InformedMonteCarloPlayer implements Player {
 	
 	private Random random;
 	private long randomSeed;
 	private String name;
-	private static final Logger logger = LoggerFactory.getLogger(InformedPlayerOrchestrator.class);
+	private static final Logger logger = LoggerFactory.getLogger(InformedMonteCarloPlayer.class);
 	private final String configFile = "runConfigs.txt";
 	private static final int WIN_SCORE = 10;
 	
@@ -52,7 +55,7 @@ public class InformedPlayerOrchestrator implements Player {
 		return "random_player_" + name;
 	}
 
-	public InformedPlayerOrchestrator(String name) {
+	public InformedMonteCarloPlayer(String name) {
 		super();
 		this.name = name;
 	}
@@ -88,17 +91,14 @@ public class InformedPlayerOrchestrator implements Player {
 		constructRootTree(currentGameState);
 		System.exit(-1);
 		
-		List<List<String>> runConfigs = ReadInputConfigs.readConfigFile(configFile);
-		for (List<String> config : runConfigs) {
-			int ownDiscardPileThreshold = Integer.parseInt(config.get(0));
-			int ownDiscardPileIncreamentFactor = Integer.parseInt(config.get(0));
-			int opponentDiscardPileThreshold = Integer.parseInt(config.get(0));
-			int minNumOfPlacements = Integer.parseInt(config.get(0));
+		List<ModelInputConfig> runConfigsList = ReadInputConfigs.readConfigFile(configFile);
+		
+		for (ModelInputConfig inputConfig : runConfigsList) {
 			
 			logger.debug("Player playing the game : " + getName());
 			logger.debug("Game state is : " + currentGameState.getHandCards().toString());
 			
-			InformedSingleInstancePlayer instance1 = new InformedSingleInstancePlayer(name, ownDiscardPileThreshold, ownDiscardPileIncreamentFactor, opponentDiscardPileThreshold, minNumOfPlacements);
+			InformedSingleInstancePlayer instance1 = new InformedSingleInstancePlayer(name, inputConfig.getOwnDiscardPileThreshold(), inputConfig.getOwnDiscardPileIncreamentFactor(), inputConfig.getOpponentDiscardPileThreshold(), inputConfig.getMinNumOfPlacements());
 			placements = instance1.getCardPlacement(currentGameState);
 			
 			listOfPlacements.add(placements);
@@ -171,31 +171,27 @@ public class InformedPlayerOrchestrator implements Player {
       
         System.out.println("Parent Node at top : " + node.getState().getGameState().toString());
         
-		List<List<String>> runConfigs = ReadInputConfigs.readConfigFile(configFile);
+		List<ModelInputConfig> runConfigsList = ReadInputConfigs.readConfigFile(configFile);
 		
-		for (List<String> config : runConfigs) {
+		for (ModelInputConfig inputConfig : runConfigsList) {
 			
 			IntermediateGameState childState = null;
-			int ownDiscardPileThreshold = Integer.parseInt(config.get(0));
-			int ownDiscardPileIncreamentFactor = Integer.parseInt(config.get(1));
-			int opponentDiscardPileThreshold = Integer.parseInt(config.get(2));
-			int minNumOfPlacements = Integer.parseInt(config.get(3));
-			
+
 			// Construct a new gamestate for child nodes
 	        childState = createChildStates(rootState);
       
 	        // Invoke the InformedPlayerInstance for each of the possible states
-			InformedPlayerInstance informedPlayerInstance = new InformedPlayerInstance(name, ownDiscardPileThreshold, ownDiscardPileIncreamentFactor, opponentDiscardPileThreshold, minNumOfPlacements);
+			InformedPlayerInstance informedPlayerInstance = new InformedPlayerInstance(name, inputConfig.getOwnDiscardPileThreshold(), inputConfig.getOwnDiscardPileIncreamentFactor(), inputConfig.getOpponentDiscardPileThreshold(), inputConfig.getMinNumOfPlacements());
 			IntermediateGameState intermediateGameState = informedPlayerInstance.getCardPlacement(childState);
 	        
 			// Create a new node and add it to the Tree
-			NodeState nodeState = new NodeState(intermediateGameState);
+			NodeState nodeState = new NodeState(intermediateGameState,inputConfig);
 	        MCTSNode newNode = new MCTSNode(nodeState);
 	        
 	        newNode.setParent(node);
 	        node.getChildArray().add(newNode);
 	        
-	        logger.info("Child Node : " + newNode.getState().getGameState().toString());
+	        logger.info("Child Node : " + newNode.getState().getGameState().toString() + "RunTime config" + newNode.getState().getModelInputConfig().toString());
         
 		}	
         logger.info("Parent Node childrens: " + node.getChildArray().size());
@@ -207,10 +203,16 @@ public class InformedPlayerOrchestrator implements Player {
         MCTSNode tempNode = node;
         NodeState tempState = tempNode.getState();
         IntermediateGameState tempIntermediateGameState = tempState.getGameState();
+        logger.info("Random Playout Intermediate Status :" + tempIntermediateGameState.toString());
+        
+        ModelInputConfig tempModelInputConfig = tempState.getModelInputConfig();
+        
         int wincount = 0;
 
-        InformedSingleInstancePlayer playerA = new InformedSingleInstancePlayer("random", 3, 5, 10, 3);
-		Player playerB = new RandomPlayer("random");
+        //TestInformedPlayerInstance playerA = new TestInformedPlayerInstance(name,tempIntermediateGameState,tempModelInputConfig.getOwnDiscardPileThreshold(),tempModelInputConfig.getOwnDiscardPileIncreamentFactor(),tempModelInputConfig.getOpponentDiscardPileThreshold(),tempModelInputConfig.getMinNumOfPlacements());
+		
+        InformedSingleInstancePlayer playerA = new InformedSingleInstancePlayer(name, tempModelInputConfig.getOwnDiscardPileThreshold(),tempModelInputConfig.getOwnDiscardPileIncreamentFactor(),tempModelInputConfig.getOpponentDiscardPileThreshold(),tempModelInputConfig.getMinNumOfPlacements());
+        Player playerB = new RandomPlayer("random");
 		Game game = new Game(playerA, playerB, randomSeed);
 		Player winner = game.simulate();
 		game.getHistory().printHistory();
