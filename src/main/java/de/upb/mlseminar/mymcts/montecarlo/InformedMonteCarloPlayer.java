@@ -42,6 +42,14 @@ public class InformedMonteCarloPlayer implements Player {
 	private static final Logger logger = LoggerFactory.getLogger(InformedMonteCarloPlayer.class);
 	private final String configFile = "runConfigs.txt";
 	private static final int WIN_SCORE = 10;
+	private long maxTimeInterationInMilliSec = 25;
+	private int maxIterations = 2;
+	
+	public InformedMonteCarloPlayer(String name) {
+		super();
+		this.name = name;
+		this.maxTimeInterationInMilliSec = 25;
+	}
 	
 	@Override
 	public void initialize(long randomSeed) {
@@ -54,12 +62,66 @@ public class InformedMonteCarloPlayer implements Player {
 	public String toString() {
 		return "random_player_" + name;
 	}
-
-	public InformedMonteCarloPlayer(String name) {
-		super();
-		this.name = name;
+	
+	@Override
+	public Move computeMove(GameState gameState) {
+		
+		List<Placement> placements = new ArrayList<Placement>();
+		
+		logger.debug("Start of the method : computeMove");
+        long start = System.currentTimeMillis();
+        long end = (start + maxTimeInterationInMilliSec);
+		
+        // Construct the root Tree
+		MCTSTree tree = new MCTSTree();
+        MCTSNode rootNode = tree.getRoot();
+        IntermediateGameState rootstate = constructIntermediateGameState(gameState);
+        
+        rootNode.getState().setGameState(rootstate);
+        rootNode.getState().setVisitCount(0);
+        rootNode.getState().setWinScore(0);
+		
+        int numberOfIterations = 0;
+        
+        while(numberOfIterations < 5) {
+        	
+        	// Phase 1 - Selection
+            MCTSNode promisingNode = selectPromisingNode(rootNode);
+            
+            logger.info("Promising Node : " + promisingNode.getState().getGameState().toString());
+            // Phase 2 - Expansion
+            expandNode(rootNode, rootstate);
+            
+            // Phase 3 - Simulation
+            MCTSNode nodeToExplore = promisingNode;
+            if (promisingNode.getChildArray().size() > 0) {
+                nodeToExplore = promisingNode.getRandomChildNode();
+            }
+            logger.info("Node chosen for simulation : " + nodeToExplore.getState().getGameState().toString());
+            int playoutResult = simulateRandomPlayout(nodeToExplore);
+            
+            // Phase 4 - Back Propagation
+            backPropogation(nodeToExplore, playoutResult);
+            
+            numberOfIterations++;
+            
+        }
+        
+        MCTSNode winnerNode = rootNode.getChildWithMaxScore();
+        logger.info("\n");
+        logger.info("Winner Node : " + winnerNode.getState().getGameState().toString() + "RunTime config" + winnerNode.getState().getModelInputConfig().toString());
+        placements = winnerNode.getState().getGameState().getListOfCardPlacements();
+        logger.info("Best Placement" + placements.toString());
+        
+        logger.info("--------------------------------------------------------------------------------");
+        tree.setRoot(winnerNode);
+		
+        
+		return (new Move(placements));
 	}
-
+	
+	
+	/*
 	@Override
 	public Move computeMove(GameState gameState) {
 		
@@ -87,7 +149,7 @@ public class InformedMonteCarloPlayer implements Player {
 		logger.info("List of possible moves from InformedPlayerInstance are =");
 		intermediateGameState.getListOfCardPlacements().forEach(System.out::println);
 		*/
-		
+		/*
 		constructRootTree(currentGameState);
 		System.exit(-1);
 		
@@ -118,12 +180,14 @@ public class InformedMonteCarloPlayer implements Player {
 		
 		return new Move(bestMove);
 	}
+	*/
 	
 	@Override
 	public String getName() {
 		return toString();
 	}
 	
+	/*
 	private void constructRootTree(GameState gameState) {
 				
 		MCTSTree tree = new MCTSTree();
@@ -158,6 +222,7 @@ public class InformedMonteCarloPlayer implements Player {
         
         
 	}
+	*/
 	
     private MCTSNode selectPromisingNode(MCTSNode rootNode) {
         MCTSNode node = rootNode;
@@ -168,9 +233,7 @@ public class InformedMonteCarloPlayer implements Player {
     }
 
     private void expandNode(MCTSNode node,IntermediateGameState rootState) {
-      
-        System.out.println("Parent Node at top : " + node.getState().getGameState().toString());
-        
+              
 		List<ModelInputConfig> runConfigsList = ReadInputConfigs.readConfigFile(configFile);
 		
 		for (ModelInputConfig inputConfig : runConfigsList) {
@@ -215,7 +278,6 @@ public class InformedMonteCarloPlayer implements Player {
         Player playerB = new RandomPlayer("random");
 		Game game = new Game(playerA, playerB, randomSeed);
 		Player winner = game.simulate();
-		game.getHistory().printHistory();
 		wincount += winner == playerA ? 1 :0;
 		
 		System.out.println("Wincount" + wincount);
@@ -224,12 +286,12 @@ public class InformedMonteCarloPlayer implements Player {
 
     }
     
-    private void backPropogation(MCTSNode nodeToExplore, double playoutResult) {
+    private void backPropogation(MCTSNode nodeToExplore, int playoutResult) {
         MCTSNode tempNode = nodeToExplore;
         while (tempNode != null) {
             tempNode.getState().incrementVisit();
             if (playoutResult == 1)
-                tempNode.getState().addScore(WIN_SCORE);
+                tempNode.getState().addScore(playoutResult);
             tempNode = tempNode.getParent();
         }
     }
