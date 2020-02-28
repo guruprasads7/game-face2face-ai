@@ -7,6 +7,14 @@ import java.util.List;
 
 import de.upb.mlseminar.utilities.NodeState;
 
+/**
+ * This class is used to create a Node Structure which will is used in,
+ * construct a Node of a MCTS tree
+ *
+ * @author Guru Prasad Savandaiah
+ * Reference : https://github.com/eugenp/tutorials/blob/master/algorithms-searching/src/main/java/com/baeldung/algorithms/mcts/tree/Node.java
+ *
+ */
 public class MCTSNode {
 
 	NodeState state;
@@ -28,19 +36,6 @@ public class MCTSNode {
         this.parent = parent;
         this.childArray = childArray;
     }
- 
-    /*
-    public Node(Node node) {
-        this.childArray = new ArrayList<>();
-        this.state = new NodeState(node.getState());
-        if (node.getParent() != null)
-            this.parent = node.getParent();
-        List<Node> childArray = node.getChildArray();
-        for (Node child : childArray) {
-            this.childArray.add(new Node(child));
-        }
-    }
-    */
 
 	public NodeState getState() {
 		return state;

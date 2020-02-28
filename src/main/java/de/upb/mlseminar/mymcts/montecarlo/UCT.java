@@ -8,6 +8,15 @@ import org.slf4j.LoggerFactory;
 
 import de.upb.mlseminar.mymcts.tree.MCTSNode;;
 
+/**
+ * This class calculates the UCT (Upper Confidence Bound for Trees) values, 
+ * and returns the best node with maximum UCT value
+ *
+ * @author Guru Prasad Savandaiah
+ * Reference : https://github.com/eugenp/tutorials/blob/master/algorithms-searching/src/main/java/com/baeldung/algorithms/mcts/montecarlo/UCT.java
+ *
+ */
+
 public class UCT {
 
 	private static final Logger logger = LoggerFactory.getLogger(UCT.class);

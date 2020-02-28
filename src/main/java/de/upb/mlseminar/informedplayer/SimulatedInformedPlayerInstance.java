@@ -19,6 +19,13 @@ import de.upb.isml.thegamef2f.engine.player.Player;
 import de.upb.mlseminar.mymcts.montecarlo.InformedMonteCarloPlayer;
 import de.upb.mlseminar.utilities.IntermediateGameState;
 
+/**
+ * This class is instance of Informed Player which is used,
+ * during the simulation phase of the MCTS approach based on the configs passed from MonteCarloPlayer
+ *
+ * @author Guru Prasad Savandaiah
+ *
+ */
 public class SimulatedInformedPlayerInstance implements Player{
 
 	private Random random;

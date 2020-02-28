@@ -14,6 +14,13 @@ import org.slf4j.LoggerFactory;
 
 import de.upb.mlseminar.mymcts.montecarlo.InformedMonteCarloPlayer;
 
+/**
+ * This class reads the state configs from a textfile
+ * and returns a ModelConfig object which is used for generating child nodes of MCTS approach
+ *
+ * @author Guru Prasad Savandaiah
+ *
+ */
 public class ReadInputConfigs {
 
 	private static final Logger logger = LoggerFactory.getLogger(InformedMonteCarloPlayer.class);

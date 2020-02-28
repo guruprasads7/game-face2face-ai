@@ -15,6 +15,7 @@ import de.upb.isml.thegamef2f.engine.board.Card;
 import de.upb.isml.thegamef2f.engine.board.Game;
 import de.upb.isml.thegamef2f.engine.player.Player;
 import de.upb.isml.thegamef2f.engine.player.RandomPlayer;
+
 import de.upb.mlseminar.informedplayer.InformedPlayerCore;
 import de.upb.mlseminar.informedplayer.SimulatedInformedPlayerInstance;
 import de.upb.mlseminar.mymcts.tree.MCTSNode;
@@ -24,6 +25,17 @@ import de.upb.mlseminar.utilities.ModelInputConfig;
 import de.upb.mlseminar.utilities.NodeState;
 import de.upb.mlseminar.utilities.ReadInputConfigs;
 
+/**
+ * This class is Monte Carlo Tree Search based AI player.
+ * At each turn, This MCTS based player generates best list of valid placements,
+ * for each iteration of hand cards. The optimal move was generated based on Custom Rule Based Informed Player,
+ * in conjunction with MCTS approach. The resulting list of placements is
+ * finally converted into a move.
+ *
+ * @author Guru Prasad Savandaiah
+ * Reference : https://github.com/eugenp/tutorials/blob/master/algorithms-searching/src/main/java/com/baeldung/algorithms/mcts/montecarlo/MonteCarloTreeSearch.java
+ *
+ */
 public class InformedMonteCarloPlayer implements Player {
 	
 	private Random random;
@@ -31,14 +43,12 @@ public class InformedMonteCarloPlayer implements Player {
 	private String name;
 	private static final Logger logger = LoggerFactory.getLogger(InformedMonteCarloPlayer.class);
 	private final String configFile = "runConfigs.txt";
-	private static final int WIN_SCORE = 10;
-	private long maxTimeInterationInMilliSec = 25;
+	private long maxTimeInterationInMilliSec = 2500;
 	private int maxIterations = 2;
 	
 	public InformedMonteCarloPlayer(String name) {
 		super();
 		this.name = name;
-		this.maxTimeInterationInMilliSec = 25;
 	}
 	
 	@Override
@@ -50,7 +60,7 @@ public class InformedMonteCarloPlayer implements Player {
 
 	@Override
 	public String toString() {
-		return "random_player_" + name;
+		return "informed_montecarlo_player_" + name;
 	}
 	
 	@Override
@@ -171,7 +181,6 @@ public class InformedMonteCarloPlayer implements Player {
     
     
     private int simulateRandomPlayout(MCTSNode node) {
-
     	
     	int wincount = 0;
     	try {
@@ -216,46 +225,6 @@ public class InformedMonteCarloPlayer implements Player {
         }
     }
     
-    /*
-    private void expandNode(Node node) {
-        List<State> possibleStates = node.getState().getAllPossibleStates();
-        possibleStates.forEach(state -> {
-            Node newNode = new Node(state);
-            newNode.setParent(node);
-            newNode.getState().setPlayerNo(node.getState().getOpponent());
-            node.getChildArray().add(newNode);
-        });
-    }
-    */
-    
-    /*
-    private void expandNode(MCTSNode node) {
-    	
-    	List<List<String>> runConfigs = ReadInputConfigs.readConfigFile(configFile);
-    	
-		for (List<String> config : runConfigs) {
-			int ownDiscardPileThreshold = Integer.parseInt(config.get(0));
-			int ownDiscardPileIncreamentFactor = Integer.parseInt(config.get(0));
-			int opponentDiscardPileThreshold = Integer.parseInt(config.get(0));
-			int minNumOfPlacements = Integer.parseInt(config.get(0));
-			
-			logger.debug("Player playing the game : " + getName());
-			logger.debug("Game state is : " + currentGameState.getHandCards().toString());
-			
-			InformedPlayer instance1 = new InformedPlayer(name, ownDiscardPileThreshold, ownDiscardPileIncreamentFactor, opponentDiscardPileThreshold, minNumOfPlacements);
-			
-			
-			placements = instance1.getCardPlacement(currentGameState);
-			
-			listOfPlacements.add(placements);
-			
-		}
-    }
-    
-    */
-    
-    
-	
 	private IntermediateGameState constructIntermediateGameState(GameState gameState) {
 		
 		IntermediateGameState intermediateGameState = new IntermediateGameState();

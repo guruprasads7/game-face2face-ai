@@ -15,6 +15,14 @@ import de.upb.isml.thegamef2f.engine.Placement;
 import de.upb.isml.thegamef2f.engine.board.Card;
 import de.upb.mlseminar.utilities.IntermediateGameState;
 
+/**
+ * This class is the base of this game implementation,
+ * It is based on the Rule State Engine based on the certain thresholds,
+ * which tries to simulate the game play by a human player.
+ *
+ * @author Guru Prasad Savandaiah
+ *
+ */
 public class InformedPlayerCore {
 	
 	private String name;

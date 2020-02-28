@@ -7,6 +7,12 @@ import de.upb.isml.thegamef2f.engine.GameState;
 import de.upb.isml.thegamef2f.engine.Placement;
 import de.upb.isml.thegamef2f.engine.board.Card;
 
+/**
+ * This class is an Intermediate object used by InformedSingleInstancePlayer
+ *
+ * @author Guru Prasad Savandaiah
+ *
+ */
 public class IntermediateMoveStatus {
 
 	GameState gameState;

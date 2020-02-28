@@ -1,5 +1,11 @@
 package de.upb.mlseminar.utilities;
 
+/**
+ * This class creates an object used for creating different states of MCTS approach
+ *
+ * @author Guru Prasad Savandaiah
+ *
+ */
 public class ModelInputConfig {
 
 	private int ownDiscardPileThreshold ;

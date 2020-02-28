@@ -8,6 +8,13 @@ import de.upb.isml.thegamef2f.engine.GameState;
 import de.upb.isml.thegamef2f.engine.Placement;
 import de.upb.isml.thegamef2f.engine.board.Card;
 
+/**
+ * This class creates a Intermediate Game State object,
+ * which is used for holding the game state during the running of the game 
+ *
+ * @author Guru Prasad Savandaiah
+ *  
+ */
 public class IntermediateGameState {
 
 	private List<Card> currentHandCards = Collections.synchronizedList(new ArrayList<Card>());

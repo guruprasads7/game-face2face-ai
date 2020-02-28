@@ -1,5 +1,14 @@
 package de.upb.mlseminar.utilities;
 
+/**
+ * This class creates a node state,
+ * that is associated with each Node of the tree constructed in the MCTS approach
+ *
+ * @author Guru Prasad Savandaiah
+ * Reference : https://github.com/eugenp/tutorials/blob/master/algorithms-searching/src/main/java/com/baeldung/algorithms/mcts/montecarlo/State.java
+ *
+ */
+
 public class NodeState {
 
 	private IntermediateGameState gameState;
@@ -83,7 +92,5 @@ public class NodeState {
         if (this.winScore != Integer.MIN_VALUE)
             this.winScore += score;
     }
-    
-	
 	
 }

@@ -16,6 +16,13 @@ import de.upb.isml.thegamef2f.engine.Placement;
 import de.upb.isml.thegamef2f.engine.board.Card;
 import de.upb.isml.thegamef2f.engine.player.Player;
 
+/**
+ * This class is simulates Rule State Engine based on the certain thresholds,
+ * to generate optimal placements and tries to simulate the game play by a human player.
+ *
+ * @author Guru Prasad Savandaiah
+ *
+ */
 public class InformedSingleInstancePlayer implements Player {
 
 	private Random random;
