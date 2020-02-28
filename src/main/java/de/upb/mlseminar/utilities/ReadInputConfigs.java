@@ -40,7 +40,8 @@ public class ReadInputConfigs {
 				inputConfig.setOwnDiscardPileThreshold(Integer.parseInt(values[0]));
 				inputConfig.setOwnDiscardPileIncreamentFactor(Integer.parseInt(values[1]));
 				inputConfig.setOpponentDiscardPileThreshold(Integer.parseInt(values[2]));
-				inputConfig.setMinNumOfPlacements(Integer.parseInt(values[3]));
+				inputConfig.setOpponentDiscardPileIncreamentFactor(Integer.parseInt(values[3]));
+				inputConfig.setMinNumOfPlacements(Integer.parseInt(values[4]));
 				
 				inputConfigsList.add(inputConfig);
             }

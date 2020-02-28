@@ -19,6 +19,7 @@ public class InformedPlayerCore {
 	private int ownDiscardPileThreshold ;
 	private int ownDiscardPileIncreamentFactor;
 	private int opponentDiscardPileThreshold;
+	private int opponentDiscardPileIncreamentFactor;
 	private int minNumOfPlacements;
 	
 	public InformedPlayerCore() {
@@ -26,12 +27,13 @@ public class InformedPlayerCore {
 	}
 	
 	public InformedPlayerCore(String name, int ownDiscardPileThreshold, int ownDiscardPileIncreamentFactor,
-			int opponentDiscardPileThreshold, int minNumOfPlacements) {
+			int opponentDiscardPileThreshold, int opponentDiscardPileIncreamentFactor, int minNumOfPlacements) {
 		super();
 		this.name = name;
 		this.ownDiscardPileThreshold = ownDiscardPileThreshold;
 		this.ownDiscardPileIncreamentFactor = ownDiscardPileIncreamentFactor;
 		this.opponentDiscardPileThreshold = opponentDiscardPileThreshold;
+		this.opponentDiscardPileIncreamentFactor = opponentDiscardPileIncreamentFactor;
 		this.minNumOfPlacements = minNumOfPlacements;
 	}
 	
@@ -71,8 +73,7 @@ public class InformedPlayerCore {
 
 		//// Real Logic starts here.
 
-		// Test for Placement on Opponents Discard Pile -- Start
-		gameStateAfterPlacement = core.opponentCardPlacement(gameStateAfterPlacement, opponentDiscardPileThreshold);
+
 
 		//gameStateAfterPlacement = opponentCardPlacement(currentGameState, currentHandCards, currentTopCardOnOpponentAscedingDiscardPile, currentTopCardOnOpponentDescendingDiscardPile)
 		
@@ -82,6 +83,9 @@ public class InformedPlayerCore {
 
 		while (placementsOfMove.size() <= minNumOfPlacements) {
 
+			// Test for Placement on Opponents Discard Pile -- Start
+			gameStateAfterPlacement = core.opponentCardPlacement(gameStateAfterPlacement, opponentDiscardPileThreshold);
+			
 			// Test for Backwards Trick -- Start
 			gameStateAfterPlacement = core.backwardsTrickValidator(currentGameState);
 			// Test for Backwards Trick -- End
@@ -92,12 +96,12 @@ public class InformedPlayerCore {
 
 			if (placementsOfMove.size() <= 2) {
 				ownDiscardPileThreshold = ownDiscardPileThreshold + ownDiscardPileIncreamentFactor;
+				opponentDiscardPileThreshold = opponentDiscardPileThreshold + opponentDiscardPileIncreamentFactor;
 				logger.debug("Updated Own DiscardPileThreshold :" + ownDiscardPileThreshold);
 			}
 
 			if (counter >= 6)
 				break;
-
 		}
 
 		gameStateAfterPlacement.setListOfCardPlacements(placementsOfMove);
@@ -399,6 +403,7 @@ public class InformedPlayerCore {
 						gameStateAfterProcedureCall.setCurrentTopCardOnOwnAscendingDiscardPile(cardProcessed);
 						ascendingListIterator.remove();
 					}
+					
 
 				}
 
@@ -454,7 +459,164 @@ public class InformedPlayerCore {
 		return gameStateAfterProcedureCall;
 
 	}
-	
+
+//	IntermediateGameState ownDiscardPilesPlacement(IntermediateGameState currentGameState,
+//			int ownDiscardPileThreshold) {
+//
+//		logger.debug("Start of the method : ownDiscardPilesPlacement");
+//		IntermediateGameState gameStateAfterProcedureCall = currentGameState;
+//		
+//		// Local variables for placement and hand-cards
+//		List<Placement> cardPlacementList = currentGameState.getListOfCardPlacements();
+//		List<Card> currentHandCards = currentGameState.getCurrentHandCards();
+//
+//
+//		currentGameState.getCurrentTopCardOnOwnAscendingDiscardPile();
+//		currentGameState.getCurrentTopCardOnOwnDescendingDiscardPile();
+//		
+//		// Check if the current hand cards are empty 
+//		if (currentHandCards.isEmpty()) {
+//			return gameStateAfterProcedureCall;
+//		}
+//		
+//		try {
+//
+//			// Sorting the cards in Ascending order
+//			List<Card> ascedingOrderListOfCards = new ArrayList<Card>(currentGameState.getCurrentHandCards());
+//			ascedingOrderListOfCards.sort((Card c1, Card c2) -> c1.getNumber() - c2.getNumber());
+//
+//			// Logic for checking the discard piles average
+//
+//			int ownDiscardPilesAverage = Math.abs(
+//					currentHandCards.get(0).getNumber() + currentHandCards.get(currentHandCards.size() - 1).getNumber())
+//					/ 2;
+//
+//			/*
+//			 * ownDiscardPilesAverage =
+//			 * Math.abs(topCardOnOwnAscendingDiscardPile.getNumber() +
+//			 * topCardOnOwnDescendingDiscardPile.getNumber()) / 2;
+//			 */
+//
+//			logger.debug("Own discard pile Average =" + ownDiscardPilesAverage);
+//
+//			// For ascending order rule
+//			List<Card> ascendingFilteredList = ascedingOrderListOfCards.stream()
+//					.filter(s -> s.getNumber() < ownDiscardPilesAverage).collect(Collectors.toList());
+//
+//			List<Card> descendingFilteredList = ascedingOrderListOfCards.stream()
+//					.filter(s -> s.getNumber() >= ownDiscardPilesAverage).collect(Collectors.toList());
+//			descendingFilteredList.sort((Card c1, Card c2) -> c2.getNumber() - c1.getNumber());
+//
+//			logger.debug("asceding order cards =" + ascendingFilteredList.toString());
+//			logger.debug("Descending order cards =" + descendingFilteredList.toString());
+//
+//			ListIterator<Card> ascendingListIterator = ascendingFilteredList.listIterator();
+//
+//			for (int i =0 ; i < ascedingOrderListOfCards.size(); i++) {
+//				logger.debug("Checking for placing the card on the Ascending Order Pile");
+//				
+//				Card cardProcessed = ascedingOrderListOfCards.get(i);
+//				// Rule for placement on own Ascending Discard pile
+//				if (cardProcessed.getNumber() > currentGameState.getCurrentTopCardOnOwnAscendingDiscardPile().getNumber() && cardProcessed
+//						.getNumber() < (currentGameState.getCurrentTopCardOnOwnAscendingDiscardPile().getNumber() + ownDiscardPileThreshold)) {
+//
+//					logger.debug("Inside Own Ascending Discard pile");
+//					Placement temp = cardPlacementUpdator(currentGameState, cardProcessed,
+//							CardPosition.OWN_ASCENDING_DISCARD_PILE);
+//
+//					if (temp != null) {
+//						cardPlacementList.add(temp);
+//						gameStateAfterProcedureCall.setCurrentTopCardOnOwnAscendingDiscardPile(cardProcessed);
+//						//ascendingListIterator.remove();
+//					}
+//					
+//					
+//					int card10LessThanTopCardAscendingOrder = (cardProcessed.getNumber() - 10);
+//					if (ascedingOrderListOfCards.contains(card10LessThanTopCardAscendingOrder)) {
+//						
+//					}
+//
+//				}
+//				
+//				
+//			}
+//			
+//			// Rule for placement on own Ascending Discard pile
+//			while (ascendingListIterator.hasNext()) {
+//
+//				logger.debug("Checking for placing the card on the Ascending Order Pile");
+//
+//				Card cardProcessed;
+//				cardProcessed = ascendingListIterator.next();
+//
+//				// Rule for placement on own Ascending Discard pile
+//				if (cardProcessed.getNumber() > currentGameState.getCurrentTopCardOnOwnAscendingDiscardPile().getNumber() && cardProcessed
+//						.getNumber() < (currentGameState.getCurrentTopCardOnOwnAscendingDiscardPile().getNumber() + ownDiscardPileThreshold)) {
+//
+//					logger.debug("Inside Own Ascending Discard pile");
+//					Placement temp = cardPlacementUpdator(currentGameState, cardProcessed,
+//							CardPosition.OWN_ASCENDING_DISCARD_PILE);
+//
+//					if (temp != null) {
+//						cardPlacementList.add(temp);
+//						gameStateAfterProcedureCall.setCurrentTopCardOnOwnAscendingDiscardPile(cardProcessed);
+//						ascendingListIterator.remove();
+//					}
+//
+//				}
+//
+//			}
+//
+//			logger.debug("#####################################################################");
+//			// Rule for placement on own Descending Discard pile
+//			ListIterator<Card> descendingListIterator = descendingFilteredList.listIterator();
+//			while (descendingListIterator.hasNext()) {
+//
+//				logger.debug("Checking for placing the card on the Descending Order Pile");
+//
+//				Card cardProcessed;
+//				cardProcessed = descendingListIterator.next();
+//
+//				// Rule for placement on own Descending Discard pile
+//				if (cardProcessed.getNumber() < currentGameState.getCurrentTopCardOnOwnDescendingDiscardPile().getNumber() && cardProcessed
+//						.getNumber() > (currentGameState.getCurrentTopCardOnOwnDescendingDiscardPile().getNumber() - ownDiscardPileThreshold)) {
+//
+//					logger.debug("Inside Own Descending Discard pile");
+//
+//					Placement temp = cardPlacementUpdator(currentGameState, cardProcessed,
+//							CardPosition.OWN_DESCENDING_DISCARD_PILE);
+//
+//					if (temp != null) {
+//						cardPlacementList.add(temp);
+//						gameStateAfterProcedureCall.setCurrentTopCardOnOwnDescendingDiscardPile(cardProcessed);
+//						descendingListIterator.remove();
+//						// descendingOrderListOfCards.remove(card);
+//					}
+//
+//				}
+//
+//			}
+//
+//			List<Card> remainCardListAfterProcessing = new ArrayList<Card>(ascendingFilteredList);
+//			remainCardListAfterProcessing.addAll(descendingFilteredList);
+//			
+//			gameStateAfterProcedureCall.setCurrentHandCards(remainCardListAfterProcessing);
+//			gameStateAfterProcedureCall.setListOfCardPlacements(cardPlacementList);
+//
+//			logger.debug("End of the method : opponentCardPlacement");
+//			logger.debug("===================================================================================");
+//
+//			return gameStateAfterProcedureCall;
+//
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//			logger.error(e.toString());
+//			System.out.println(e);
+//		}
+//
+//		return gameStateAfterProcedureCall;
+//
+//	}
 	
 	private boolean isPlacementValid(Placement placement, IntermediateGameState currentGameState, boolean placingOnOpponentPilesAllowed) {
 		switch (placement.getPosition()) {

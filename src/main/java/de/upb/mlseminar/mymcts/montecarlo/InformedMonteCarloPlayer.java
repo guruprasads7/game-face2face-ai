@@ -1,21 +1,13 @@
 package de.upb.mlseminar.mymcts.montecarlo;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ch.qos.logback.core.db.dialect.MySQLDialect;
 import de.upb.isml.thegamef2f.engine.GameState;
 import de.upb.isml.thegamef2f.engine.Move;
 import de.upb.isml.thegamef2f.engine.Placement;
@@ -24,11 +16,7 @@ import de.upb.isml.thegamef2f.engine.board.Game;
 import de.upb.isml.thegamef2f.engine.player.Player;
 import de.upb.isml.thegamef2f.engine.player.RandomPlayer;
 import de.upb.mlseminar.informedplayer.InformedPlayerCore;
-import de.upb.mlseminar.informedplayer.InformedSingleInstancePlayer;
 import de.upb.mlseminar.informedplayer.SimulatedInformedPlayerInstance;
-import de.upb.mlseminar.mcts.montecarlo.State;
-import de.upb.mlseminar.mcts.tictactoe.Board;
-import de.upb.mlseminar.mcts.tree.Node;
 import de.upb.mlseminar.mymcts.tree.MCTSNode;
 import de.upb.mlseminar.mymcts.tree.MCTSTree;
 import de.upb.mlseminar.utilities.IntermediateGameState;
@@ -92,7 +80,7 @@ public class InformedMonteCarloPlayer implements Player {
         int numberOfIterations = 0;
         
         int noOfChildren = 0; 
-        while(numberOfIterations < 2) {
+        while(numberOfIterations < 5) {
         		
         	// Phase 1 - Selection
             MCTSNode promisingNode = selectPromisingNode(rootNode);
@@ -102,6 +90,7 @@ public class InformedMonteCarloPlayer implements Player {
             expandNode(rootNode, rootstate);
             
             noOfChildren = rootNode.getChildArray().size();
+            
             if(noOfChildren == 0 ) {
             	logger.info("Parent Node has: " + rootNode.getChildArray().size() + " children, hence terminating the game");
             	List<Placement> zeroPlacements = new ArrayList<Placement>();
@@ -160,7 +149,7 @@ public class InformedMonteCarloPlayer implements Player {
 	        childState = createChildStates(rootState);
       
 	        // Invoke the InformedPlayerInstance for each of the possible states
-			InformedPlayerCore informedPlayerInstance = new InformedPlayerCore(name, inputConfig.getOwnDiscardPileThreshold(), inputConfig.getOwnDiscardPileIncreamentFactor(), inputConfig.getOpponentDiscardPileThreshold(), inputConfig.getMinNumOfPlacements());
+			InformedPlayerCore informedPlayerInstance = new InformedPlayerCore(name, inputConfig.getOwnDiscardPileThreshold(), inputConfig.getOwnDiscardPileIncreamentFactor(), inputConfig.getOpponentDiscardPileThreshold(), inputConfig.getOpponentDiscardPileIncreamentFactor(), inputConfig.getMinNumOfPlacements());
 			IntermediateGameState intermediateGameState = informedPlayerInstance.getCardPlacement(childState);
 	        placements = intermediateGameState.getListOfCardPlacements();
 			

@@ -5,6 +5,7 @@ public class ModelInputConfig {
 	private int ownDiscardPileThreshold ;
 	private int ownDiscardPileIncreamentFactor;
 	private int opponentDiscardPileThreshold;
+	private int opponentDiscardPileIncreamentFactor;
 	private int minNumOfPlacements;
 	
 	public ModelInputConfig() {
@@ -12,11 +13,12 @@ public class ModelInputConfig {
 	}
 	
 	public ModelInputConfig(int ownDiscardPileThreshold, int ownDiscardPileIncreamentFactor,
-			int opponentDiscardPileThreshold, int minNumOfPlacements) {
+			int opponentDiscardPileThreshold, int opponentDiscardPileIncreamentFactor, int minNumOfPlacements) {
 		super();
 		this.ownDiscardPileThreshold = ownDiscardPileThreshold;
 		this.ownDiscardPileIncreamentFactor = ownDiscardPileIncreamentFactor;
 		this.opponentDiscardPileThreshold = opponentDiscardPileThreshold;
+		this.opponentDiscardPileIncreamentFactor = opponentDiscardPileIncreamentFactor;
 		this.minNumOfPlacements = minNumOfPlacements;
 	}
 
@@ -44,6 +46,15 @@ public class ModelInputConfig {
 		this.opponentDiscardPileThreshold = opponentDiscardPileThreshold;
 	}
 
+	
+	public int getOpponentDiscardPileIncreamentFactor() {
+		return opponentDiscardPileIncreamentFactor;
+	}
+
+	public void setOpponentDiscardPileIncreamentFactor(int opponentDiscardPileIncreamentFactor) {
+		this.opponentDiscardPileIncreamentFactor = opponentDiscardPileIncreamentFactor;
+	}
+
 	public int getMinNumOfPlacements() {
 		return minNumOfPlacements;
 	}
@@ -56,10 +67,10 @@ public class ModelInputConfig {
 	public String toString() {
 		return "ModelInputConfig [ownDiscardPileThreshold=" + ownDiscardPileThreshold
 				+ ", ownDiscardPileIncreamentFactor=" + ownDiscardPileIncreamentFactor
-				+ ", opponentDiscardPileThreshold=" + opponentDiscardPileThreshold + ", minNumOfPlacements="
-				+ minNumOfPlacements + "]";
+				+ ", opponentDiscardPileThreshold=" + opponentDiscardPileThreshold
+				+ ", opponentDiscardPileIncreamentFactor=" + opponentDiscardPileIncreamentFactor
+				+ ", minNumOfPlacements=" + minNumOfPlacements + "]";
 	}
 
-	
 	
 }

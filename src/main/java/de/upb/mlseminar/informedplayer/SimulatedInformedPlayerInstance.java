@@ -28,6 +28,7 @@ public class SimulatedInformedPlayerInstance implements Player{
 	private int ownDiscardPileThreshold ;
 	private int ownDiscardPileIncreamentFactor;
 	private int opponentDiscardPileThreshold;
+	private int opponentDiscardPileIncreamentFactor;
 	private int minNumOfPlacements;
 	
 	private int classCallCount = 0; 
@@ -55,6 +56,7 @@ public class SimulatedInformedPlayerInstance implements Player{
 		this.ownDiscardPileThreshold = ownDiscardPileThreshold;
 		this.ownDiscardPileIncreamentFactor = ownDiscardPileIncreamentFactor;
 		this.opponentDiscardPileThreshold = opponentDiscardPileThreshold;
+		this.opponentDiscardPileIncreamentFactor = opponentDiscardPileIncreamentFactor;
 		this.minNumOfPlacements = minNumOfPlacements;
 	}
 
@@ -266,10 +268,10 @@ public class SimulatedInformedPlayerInstance implements Player{
 		// Increment the method call count 
 		methodCallCount = methodCallCount +1;
 		List<Placement> placements = new ArrayList<Placement>();
-		InformedPlayerCore playerCore = new InformedPlayerCore(name, ownDiscardPileThreshold, ownDiscardPileIncreamentFactor, opponentDiscardPileThreshold, minNumOfPlacements);
+		InformedPlayerCore playerCore = new InformedPlayerCore(name, ownDiscardPileThreshold, ownDiscardPileIncreamentFactor, opponentDiscardPileThreshold, opponentDiscardPileIncreamentFactor, minNumOfPlacements);
 		
-    	logger.info("Class call count : " + classCallCount);
-    	logger.info("Method call count : " + methodCallCount);
+    	logger.debug("Class call count : " + classCallCount);
+    	logger.debug("Method call count : " + methodCallCount);
     	
     	//int counter = TestInformedPlayerInstance.classCallCount;
 		
@@ -283,12 +285,12 @@ public class SimulatedInformedPlayerInstance implements Player{
 			return new Move(placements);
 		}
 		
-		logger.info("Hand Card Before the call" + childState.getCurrentHandCards().toString()) ;
-		logger.info("Card Placements Before the call" + childState.getListOfCardPlacements().toString());
+		logger.debug("Hand Card Before the call" + childState.getCurrentHandCards().toString()) ;
+		logger.debug("Card Placements Before the call" + childState.getListOfCardPlacements().toString());
 		
 		if (methodCallCount == 1 && childState.getListOfCardPlacements().size() >= 2) {
 		
-			logger.info("Intermediate states have placement list");
+			logger.debug("Intermediate states have placement list");
 			placements = childState.getListOfCardPlacements();
 			
 			//this.intermediateGameState = constructIntermediateGameState(gameState);
@@ -298,8 +300,8 @@ public class SimulatedInformedPlayerInstance implements Player{
 			//System.out.println("hello inside increamentor");
 			IntermediateGameState currentGameState = constructIntermediateGameState(gameState);
 			IntermediateGameState resultState = playerCore.getCardPlacement(currentGameState);
-			logger.info("Hand Card" + resultState.getCurrentHandCards().toString()) ;
-			logger.info("after the call" + resultState.toString());
+			logger.debug("Hand Card" + resultState.getCurrentHandCards().toString()) ;
+			logger.debug("after the call" + resultState.toString());
 			placements = resultState.getListOfCardPlacements();
 			logger.debug("List of possible moves from InformedPlayerInstance are =");
 			//placements.forEach(System.out::println);
