@@ -30,8 +30,15 @@ public class TestInformedPlayerInstance  implements Player{
 	private int opponentDiscardPileThreshold;
 	private int minNumOfPlacements;
 	
-	static int classCallCount = 0; 
+	private int classCallCount = 0; 
+	private int methodCallCount = 0;
 	
+	public void rest(){
+		
+	classCallCount = 0;
+	methodCallCount = 0;
+		
+	}
 	
 	private static final Logger logger = LoggerFactory.getLogger(InformedSingleInstancePlayer.class);
 
@@ -745,42 +752,48 @@ public class TestInformedPlayerInstance  implements Player{
 	@Override
 	public Move computeMove(GameState gameState) {
 		
-		classCallCount = classCallCount +1;
+		methodCallCount = methodCallCount +1;
+		List<Placement> placements = new ArrayList<Placement>();
 		
-    	logger.debug("Class call count : " + TestInformedPlayerInstance.classCallCount);
-    	int counter = TestInformedPlayerInstance.classCallCount;
+    	logger.info("Class call count : " + classCallCount);
+    	logger.info("Method call count : " + methodCallCount);
+    	
+    	//int counter = TestInformedPlayerInstance.classCallCount;
 		
 		try {
-		List<Placement> placements = new ArrayList<Placement>();
+		
 		IntermediateGameState childState = createChildStates(intermediateGameState);
 		
-		logger.debug("Hand Card Before the call" + childState.getCurrentHandCards().toString()) ;
-		logger.debug("Card Placements Before the call" + childState.getListOfCardPlacements().toString());
-		
-		if (TestInformedPlayerInstance.classCallCount == 1) {
-		
-		if(childState.getCurrentHandCards().isEmpty() || childState.getListOfCardPlacements().size() >= 2) {
-			logger.debug("in here");
+		if (childState.getCurrentHandCards().isEmpty()) {
 			placements = childState.getListOfCardPlacements();
-			logger.debug("Placements:" + placements.toString() );
+			//this.intermediateGameState = constructIntermediateGameState(gameState);
+			return new Move(placements);
+		}
+		
+		logger.info("Hand Card Before the call" + childState.getCurrentHandCards().toString()) ;
+		logger.info("Card Placements Before the call" + childState.getListOfCardPlacements().toString());
+		
+		if (methodCallCount == 1 && childState.getListOfCardPlacements().size() >= 2) {
+		
+			logger.info("Intermediate states have placement list");
+			placements = childState.getListOfCardPlacements();
 			
 			//this.intermediateGameState = constructIntermediateGameState(gameState);
 			return new Move(placements);
 		}
-		}
 		
-		
+		logger.info("In here");
 
 			//System.out.println("hello inside increamentor");
 			IntermediateGameState currentGameState = constructIntermediateGameState(gameState);
 			IntermediateGameState resultState = getCardPlacement(currentGameState);
-			logger.debug("Hand Card" + resultState.getCurrentHandCards().toString()) ;
-			logger.debug("after the call" + resultState.toString());
+			logger.info("Hand Card" + resultState.getCurrentHandCards().toString()) ;
+			logger.info("after the call" + resultState.toString());
 			placements = resultState.getListOfCardPlacements();
 			logger.debug("List of possible moves from InformedPlayerInstance are =");
 			//placements.forEach(System.out::println);
 			
-			this.intermediateGameState = constructIntermediateGameState(gameState);
+			//this.intermediateGameState = constructIntermediateGameState(gameState);
 			Move move = new Move(placements);
 			logger.debug("Move is " + move.getPlacements());
 			
@@ -792,7 +805,7 @@ public class TestInformedPlayerInstance  implements Player{
 		e.printStackTrace();
 		logger.error(e.toString());
 		System.out.println(e);
-		return null;
+		return new Move(placements);
 	}
 		
 	}
