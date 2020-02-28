@@ -23,9 +23,9 @@ import de.upb.isml.thegamef2f.engine.board.Card;
 import de.upb.isml.thegamef2f.engine.board.Game;
 import de.upb.isml.thegamef2f.engine.player.Player;
 import de.upb.isml.thegamef2f.engine.player.RandomPlayer;
-import de.upb.mlseminar.informedplayer.InformedPlayerInstance;
+import de.upb.mlseminar.informedplayer.InformedPlayerCore;
 import de.upb.mlseminar.informedplayer.InformedSingleInstancePlayer;
-import de.upb.mlseminar.informedplayer.TestInformedPlayerInstance;
+import de.upb.mlseminar.informedplayer.SimulatedInformedPlayerInstance;
 import de.upb.mlseminar.mcts.montecarlo.State;
 import de.upb.mlseminar.mcts.tictactoe.Board;
 import de.upb.mlseminar.mcts.tree.Node;
@@ -138,164 +138,7 @@ public class InformedMonteCarloPlayer implements Player {
         
 		return (new Move(placements));
 	}
-	
-	
-	/*
-	@Override
-	public Move computeMove(GameState gameState) {
-		
-		logger.debug("Start of the method : computeMove");
-		GameState currentGameState = gameState;
 
-		List<Placement> placements = new ArrayList<Placement>();
-		List<List<Placement>> listOfPlacements = new ArrayList<List<Placement>>();
-		List<Placement> bestMove = new ArrayList<Placement>();
-		
-		/*
-		// Normal Game call
-		InformedSingleInstancePlayer instance = new InformedSingleInstancePlayer(name, 3, 5, 10, 3);
-		placements = instance.getCardPlacement(currentGameState);
-		
-		logger.info("List of possible moves from InformedSingleInstancePlayer are =");
-		placements.forEach(System.out::println);
-		
-		
-		// Game Call for the new IntermediateGameState
-		IntermediateGameState intermediateGameState = constructIntermediateGameState(currentGameState);
-		InformedPlayerInstance informedPlayerInstance = new InformedPlayerInstance(name, 3, 5, 10, 3);
-		
-		intermediateGameState = informedPlayerInstance.getCardPlacement(intermediateGameState);
-		logger.info("List of possible moves from InformedPlayerInstance are =");
-		intermediateGameState.getListOfCardPlacements().forEach(System.out::println);
-		*/
-		/*
-		constructRootTree(currentGameState);
-		System.exit(-1);
-		
-		List<ModelInputConfig> runConfigsList = ReadInputConfigs.readConfigFile(configFile);
-		
-		for (ModelInputConfig inputConfig : runConfigsList) {
-			
-			logger.debug("Player playing the game : " + getName());
-			logger.debug("Game state is : " + currentGameState.getHandCards().toString());
-			
-			InformedSingleInstancePlayer instance1 = new InformedSingleInstancePlayer(name, inputConfig.getOwnDiscardPileThreshold(), inputConfig.getOwnDiscardPileIncreamentFactor(), inputConfig.getOpponentDiscardPileThreshold(), inputConfig.getMinNumOfPlacements());
-			placements = instance1.getCardPlacement(currentGameState);
-			
-			listOfPlacements.add(placements);
-			
-		}
-		
-		logger.info("List of possible moves are =");
-		listOfPlacements.forEach(System.out::println);
-		
-		int randomElementIndex
-		  = ThreadLocalRandom.current().nextInt(listOfPlacements.size()) % listOfPlacements.size();
-
-		//logger.info("RandomElementIndex :" + randomElementIndex);
-		
-		bestMove = listOfPlacements.get(randomElementIndex);
-		logger.info("Best Move :" + bestMove.toString());
-		
-		return new Move(bestMove);
-	}
-	*/
-	
-	/*
-	private void constructRootTree(GameState gameState) {
-				
-		MCTSTree tree = new MCTSTree();
-        MCTSNode rootNode = tree.getRoot();
-        IntermediateGameState rootstate = constructIntermediateGameState(gameState);
-        
-        rootNode.getState().setGameState(rootstate);
-        rootNode.getState().setVisitCount(0);
-        rootNode.getState().setWinScore(0);
-        
-        // Phase 1 - Selection
-        MCTSNode promisingNode = selectPromisingNode(rootNode);
-        
-        logger.info("Promising Node : " + promisingNode.getState().getGameState().toString());
-        // Phase 2 - Expansion
-        expandNode(rootNode, rootstate);
-        
-        // Phase 3 - Simulation
-        MCTSNode nodeToExplore = promisingNode;
-        if (promisingNode.getChildArray().size() > 0) {
-            nodeToExplore = promisingNode.getRandomChildNode();
-        }
-        logger.info("Node chosen for simulation : " + nodeToExplore.getState().getGameState().toString());
-        int playoutResult = simulateRandomPlayout(nodeToExplore);
-        
-        backPropogation(nodeToExplore, playoutResult);
-
-        MCTSNode winnerNode = rootNode.getChildWithMaxScore();
-        System.out.println(" Winner node : " + winnerNode.getState().getGameState().toString());
-        
-        tree.setRoot(winnerNode);
-        
-        
-	}
-	*/
-	
-	/*
-	@Override
-	public Move computeMove(GameState gameState) {
-		
-		List<Placement> placements = new ArrayList<Placement>();
-		
-		logger.debug("Start of the method : computeMove");
-        long start = System.currentTimeMillis();
-        long end = (start + maxTimeInterationInMilliSec);
-		
-        // Construct the root Tree
-		MCTSTree tree = new MCTSTree();
-        MCTSNode rootNode = tree.getRoot();
-        IntermediateGameState rootstate = constructIntermediateGameState(gameState);
-        
-        rootNode.getState().setGameState(rootstate);
-        rootNode.getState().setVisitCount(0);
-        rootNode.getState().setWinScore(0);
-		
-        int numberOfIterations = 0;
-        
-        	
-        	// Phase 1 - Selection
-            MCTSNode promisingNode = selectPromisingNode(rootNode);
-            
-            logger.info("Promising Node : " + promisingNode.getState().getGameState().toString());
-            // Phase 2 - Expansion
-            expandNode(rootNode, rootstate);
-            
-            // Phase 3 - Simulation
-            MCTSNode nodeToExplore = promisingNode;
-            if (promisingNode.getChildArray().size() > 0) {
-                nodeToExplore = promisingNode.getRandomChildNode();
-            }
-            logger.info("Node chosen for simulation : " + nodeToExplore.getState().getGameState().toString());
-            int playoutResult = simulateRandomPlayout(nodeToExplore);
-            
-            System.exit(-1);
-            
-            // Phase 4 - Back Propagation
-            backPropogation(nodeToExplore, playoutResult);
-            
-        
-        MCTSNode winnerNode = rootNode.getChildWithMaxScore();
-        logger.info("\n");
-        logger.info("Winner Node : " + winnerNode.getState().getGameState().toString() + "RunTime config" + winnerNode.getState().getModelInputConfig().toString());
-        placements = winnerNode.getState().getGameState().getListOfCardPlacements();
-        logger.info("Best Placement" + placements.toString());
-        
-        logger.info("--------------------------------------------------------------------------------");
-        tree.setRoot(winnerNode);
-		
-        
-		return (new Move(placements));
-	}
-
-	*/
-	
     private MCTSNode selectPromisingNode(MCTSNode rootNode) {
         MCTSNode node = rootNode;
         while (node.getChildArray().size() != 0) {
@@ -317,7 +160,7 @@ public class InformedMonteCarloPlayer implements Player {
 	        childState = createChildStates(rootState);
       
 	        // Invoke the InformedPlayerInstance for each of the possible states
-			InformedPlayerInstance informedPlayerInstance = new InformedPlayerInstance(name, inputConfig.getOwnDiscardPileThreshold(), inputConfig.getOwnDiscardPileIncreamentFactor(), inputConfig.getOpponentDiscardPileThreshold(), inputConfig.getMinNumOfPlacements());
+			InformedPlayerCore informedPlayerInstance = new InformedPlayerCore(name, inputConfig.getOwnDiscardPileThreshold(), inputConfig.getOwnDiscardPileIncreamentFactor(), inputConfig.getOpponentDiscardPileThreshold(), inputConfig.getMinNumOfPlacements());
 			IntermediateGameState intermediateGameState = informedPlayerInstance.getCardPlacement(childState);
 	        placements = intermediateGameState.getListOfCardPlacements();
 			
@@ -353,7 +196,7 @@ public class InformedMonteCarloPlayer implements Player {
         
         
 
-        TestInformedPlayerInstance playerA = new TestInformedPlayerInstance(name,tempIntermediateGameState,tempModelInputConfig.getOwnDiscardPileThreshold(),tempModelInputConfig.getOwnDiscardPileIncreamentFactor(),tempModelInputConfig.getOpponentDiscardPileThreshold(),tempModelInputConfig.getMinNumOfPlacements());
+        SimulatedInformedPlayerInstance playerA = new SimulatedInformedPlayerInstance(name,tempIntermediateGameState,tempModelInputConfig.getOwnDiscardPileThreshold(),tempModelInputConfig.getOwnDiscardPileIncreamentFactor(),tempModelInputConfig.getOpponentDiscardPileThreshold(),tempModelInputConfig.getMinNumOfPlacements());
         //InformedSingleInstancePlayer playerA = new InformedSingleInstancePlayer(name, tempModelInputConfig.getOwnDiscardPileThreshold(),tempModelInputConfig.getOwnDiscardPileIncreamentFactor(),tempModelInputConfig.getOpponentDiscardPileThreshold(),tempModelInputConfig.getMinNumOfPlacements());
         Player playerB = new RandomPlayer("random");
 		Game game = new Game(playerA, playerB, randomSeed);
