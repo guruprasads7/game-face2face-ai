@@ -43,7 +43,7 @@ public class InformedMonteCarloPlayer implements Player {
 	private String name;
 	private static final Logger logger = LoggerFactory.getLogger(InformedMonteCarloPlayer.class);
 	private final String configFile = "runConfigs.txt";
-	private long maxTimeInterationInMilliSec = 2500;
+	private long maxTimeInterationInMilliSec = 2000;
 	private int maxIterations = 2;
 	
 	public InformedMonteCarloPlayer(String name) {
@@ -90,7 +90,7 @@ public class InformedMonteCarloPlayer implements Player {
         int numberOfIterations = 0;
         
         int noOfChildren = 0; 
-        while(numberOfIterations < 5) {
+        while(numberOfIterations < 5 && System.currentTimeMillis() < end) {
         		
         	// Phase 1 - Selection
             MCTSNode promisingNode = selectPromisingNode(rootNode);
