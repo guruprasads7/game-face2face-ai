@@ -1,6 +1,9 @@
 package de.upb.mlseminar;
 
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import de.upb.isml.thegamef2f.engine.board.Game;
 import de.upb.isml.thegamef2f.engine.player.Player;
 import de.upb.isml.thegamef2f.engine.player.RandomPlayer;
@@ -9,7 +12,9 @@ import de.upb.mlseminar.mymcts.montecarlo.InformedMonteCarloPlayer;
 
 public class RunGameInformed {
 
+	private static final Logger logger = LoggerFactory.getLogger(RunGameInformed.class);
 	public static void main(String[] args) {
+		
 		
 		/*
 		Player playerA1 = new InformedMonteCarloPlayer("a");
