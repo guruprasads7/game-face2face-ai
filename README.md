@@ -14,6 +14,16 @@ Stages of MCTS approach:
 
 ## Running the game
 
+Please clone the repository and build it using maven clean package. Add the jar game-face2face-ai.jar and the-game-f2f-engine.jar to the class paths and the Run the code using the below snippet as reference.
+
+import de.upb.isml.thegamef2f.engine.board.Game;
+
+import de.upb.isml.thegamef2f.engine.player.Player;
+
+import de.upb.isml.thegamef2f.engine.player.RandomPlayer;
+
+import de.upb.mlseminar.mymcts.montecarlo.*;
+
 1. Initialize the player A
 
     `Player playerA = new InformedMonteCarloPlayer("playerA");`
