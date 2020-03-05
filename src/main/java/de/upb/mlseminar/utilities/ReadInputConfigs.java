@@ -28,9 +28,55 @@ public class ReadInputConfigs {
 	public static List<ModelInputConfig> readConfigFile(String configFile) {
 		
 		List<ModelInputConfig> inputConfigsList =  new ArrayList<>();
+        
+        ModelInputConfig inputConfig1 = new ModelInputConfig(3,3,10,0,3);
+        inputConfigsList.add(inputConfig1);
+        
+        ModelInputConfig inputConfig2 = new ModelInputConfig(5,3,5,0,3);
+        inputConfigsList.add(inputConfig2);
+        
+        ModelInputConfig inputConfig3 = new ModelInputConfig(3,5,10,0,3);
+        inputConfigsList.add(inputConfig3);
+        
+        ModelInputConfig inputConfig4 = new ModelInputConfig(3,5,20,0,3);
+        inputConfigsList.add(inputConfig4);
+        
+        ModelInputConfig inputConfig5 = new ModelInputConfig(5,5,20,0,3);
+        inputConfigsList.add(inputConfig5);
+        
+        ModelInputConfig inputConfig6 = new ModelInputConfig(5,5,10,0,3);
+        inputConfigsList.add(inputConfig6);
+        
+        ModelInputConfig inputConfig7 = new ModelInputConfig(3,3,5,2,3);
+        inputConfigsList.add(inputConfig7);
+        
+        ModelInputConfig inputConfig8 = new ModelInputConfig(5,3,3,5,3);
+        inputConfigsList.add(inputConfig8);
+        
+        ModelInputConfig inputConfig9 = new ModelInputConfig(3,5,2,5,2);
+        inputConfigsList.add(inputConfig9);
+        
+        ModelInputConfig inputConfig10 = new ModelInputConfig(3,5,6,2,3);
+        inputConfigsList.add(inputConfig10);
+        
+        ModelInputConfig inputConfig11 = new ModelInputConfig(5,5,7,4,3);
+        inputConfigsList.add(inputConfig11);
+        
+        ModelInputConfig inputConfig12 = new ModelInputConfig(5,5,20,0,2);
+        inputConfigsList.add(inputConfig12);
+        
+        ModelInputConfig inputConfig13 = new ModelInputConfig(5,5,10,2,4);
+        inputConfigsList.add(inputConfig13);
+        
+        ModelInputConfig inputConfig14 = new ModelInputConfig(5,5,10,2,5);
+        inputConfigsList.add(inputConfig14);
+        
+        ModelInputConfig inputConfig15 = new ModelInputConfig(5,5,20,2,4);
+        inputConfigsList.add(inputConfig15);
+        
+        /*
         ClassLoader classLoader = new ReadInputConfigs().getClass().getClassLoader();
         File file = new File(classLoader.getResource(configFile).getFile());
-        
         String strLine = "";
         String DELIMITER = ",";
         List<List<String>> runConfigs = new ArrayList<>();
@@ -53,11 +99,12 @@ public class ReadInputConfigs {
 				inputConfigsList.add(inputConfig);
             }
              br.close();
-        } catch (FileNotFoundException e) {
+        } catch (Exception e) {
             logger.error("File not found");
-        } catch (IOException e) {
-        	logger.error("Unable to read the file.");
+			e.printStackTrace();
+			
         }
+        */
      return inputConfigsList;
 }
 }
