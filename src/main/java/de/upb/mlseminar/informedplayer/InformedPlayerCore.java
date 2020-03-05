@@ -2,7 +2,6 @@ package de.upb.mlseminar.informedplayer;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -86,10 +85,6 @@ public class InformedPlayerCore {
 			// Test for Placement on Opponents Discard Pile -- Start
 			gameStateAfterPlacement = core.opponentCardPlacement(gameStateAfterPlacement, opponentDiscardPileThreshold);
 
-			// gameStateAfterPlacement = opponentCardPlacement(currentGameState,
-			// currentHandCards, currentTopCardOnOpponentAscedingDiscardPile,
-			// currentTopCardOnOpponentDescendingDiscardPile)
-
 			// Test for Placement on Opponents Discard Pile -- End
 
 			int counter = 0;
@@ -162,12 +157,11 @@ public class InformedPlayerCore {
 		logger.debug("Start of the method : backwardsTrickValidator");
 		List<Placement> cardPlacementList = currentGameState.getListOfCardPlacements();
 
-		ListIterator<Card> backwardCardIterator = currentGameState.getCurrentHandCards().listIterator();
+		List<Card> currentHandCards = currentGameState.getCurrentHandCards();
 
 		try {
 			// Test for Backwards Trick
-			while (backwardCardIterator.hasNext()) {
-				Card card = backwardCardIterator.next();
+			for(Card card : currentHandCards){
 
 				logger.debug("Processing for card" + card);
 
@@ -183,7 +177,6 @@ public class InformedPlayerCore {
 					if (temp != null) {
 						cardPlacementList.add(temp);
 						gameStateAfterProcedureCall.setCurrentTopCardOnOwnAscendingDiscardPile(card);
-						backwardCardIterator.remove();
 					}
 
 				}
@@ -199,14 +192,20 @@ public class InformedPlayerCore {
 					if (temp != null) {
 						cardPlacementList.add(temp);
 						gameStateAfterProcedureCall.setCurrentTopCardOnOwnDescendingDiscardPile(card);
-						backwardCardIterator.remove();
 					}
 
 				}
 
 			}
+			
+			for (Placement currentPlacement : cardPlacementList) {
+				if (currentHandCards.contains(currentPlacement.getCard()))
+					currentHandCards.remove(currentPlacement.getCard());
+			}
 
+			gameStateAfterProcedureCall.setCurrentHandCards(currentHandCards);
 			gameStateAfterProcedureCall.setListOfCardPlacements(cardPlacementList);
+			
 			logger.debug("CardPlacement list at the end of backwardsTrickValidator"
 					+ gameStateAfterProcedureCall.getListOfCardPlacements().toString());
 			logger.debug("End of the method : backwardsTrickValidator");
@@ -240,12 +239,11 @@ public class InformedPlayerCore {
 		int leastDifference = 99999;
 		int ascOrDecFlag = -1; // 1 for ascending, 2 for descending
 
-		ListIterator<Card> opponentCardIterator = currentGameState.getCurrentHandCards().listIterator();
+		List<Card> currentHandCards = currentGameState.getCurrentHandCards();
 
 		try {
 
-			while (opponentCardIterator.hasNext()) {
-				Card card = opponentCardIterator.next();
+			for(Card card : currentHandCards) {
 
 				logger.debug("Processing for card" + card);
 				int diffBtwOpponentAscendingDiscardPile = gameStateAfterProcedureCall
@@ -321,7 +319,6 @@ public class InformedPlayerCore {
 					if (temp != null) {
 						cardPlacementList.add(temp);
 						gameStateAfterProcedureCall.setCurrentTopCardOnOpponentAscendingDiscardPile(bestCandidate);
-						opponentCardIterator.remove();
 
 					}
 
@@ -335,11 +332,17 @@ public class InformedPlayerCore {
 					if (temp != null) {
 						cardPlacementList.add(temp);
 						gameStateAfterProcedureCall.setCurrentTopCardOnOpponentDescendingDiscardPile(bestCandidate);
-						opponentCardIterator.remove();
 					}
 				}
 
 			}
+			
+			for (Placement currentPlacement : cardPlacementList) {
+				if (currentHandCards.contains(currentPlacement.getCard()))
+					currentHandCards.remove(currentPlacement.getCard());
+			}
+
+			gameStateAfterProcedureCall.setCurrentHandCards(currentHandCards);		
 			gameStateAfterProcedureCall.setListOfCardPlacements(cardPlacementList);
 
 			logger.debug("End of the method : opponentCardPlacement");
