@@ -73,7 +73,7 @@ public class InformedMonteCarloPlayer implements Player {
 
 		List<Placement> placements = new ArrayList<Placement>();
 
-		logger.debug("Start of the method : computeMove");
+//		logger.debug("Start of the method : computeMove");
 		long start = System.currentTimeMillis();
 		long end = (start + maxTimeInterationInMilliSec);
 
@@ -94,15 +94,15 @@ public class InformedMonteCarloPlayer implements Player {
 			// Phase 1 - Selection
 			MCTSNode promisingNode = selectPromisingNode(rootNode);
 
-			logger.debug("Promising Node : " + promisingNode.getState().getGameState().toString());
+//			logger.debug("Promising Node : " + promisingNode.getState().getGameState().toString());
 			// Phase 2 - Expansion
 			expandNode(rootNode, rootstate);
 
 			noOfChildren = rootNode.getChildArray().size();
 
 			if (noOfChildren == 0) {
-				logger.debug("Parent Node has: " + rootNode.getChildArray().size()
-						+ " children, hence terminating the game");
+//				logger.debug("Parent Node has: " + rootNode.getChildArray().size()
+//						+ " children, hence terminating the game");
 				List<Placement> zeroPlacements = new ArrayList<Placement>();
 				return (new Move(zeroPlacements));
 			}
@@ -113,7 +113,7 @@ public class InformedMonteCarloPlayer implements Player {
 				nodeToExplore = promisingNode.getRandomChildNode();
 			}
 
-			logger.debug("Node chosen for simulation : " + nodeToExplore.getState().getGameState().toString());
+//			logger.debug("Node chosen for simulation : " + nodeToExplore.getState().getGameState().toString());
 			int playoutResult = simulateRandomPlayout(nodeToExplore);
 
 			// Phase 4 - Back Propagation
@@ -124,13 +124,13 @@ public class InformedMonteCarloPlayer implements Player {
 		}
 
 		MCTSNode winnerNode = rootNode.getChildWithMaxScore();
-		logger.debug("\n");
-		logger.debug("Winner Node : " + winnerNode.getState().getGameState().toString() + "RunTime config"
-				+ winnerNode.getState().getModelInputConfig().toString());
+//		logger.debug("\n");
+//		logger.debug("Winner Node : " + winnerNode.getState().getGameState().toString() + "RunTime config"
+//				+ winnerNode.getState().getModelInputConfig().toString());
 		placements = winnerNode.getState().getGameState().getListOfCardPlacements();
-		logger.debug("Best Placement" + placements.toString());
-
-		logger.debug("--------------------------------------------------------------------------------");
+//		logger.debug("Best Placement" + placements.toString());
+//
+//		logger.debug("--------------------------------------------------------------------------------");
 		tree.setRoot(winnerNode);
 
 		return (new Move(placements));
@@ -175,11 +175,11 @@ public class InformedMonteCarloPlayer implements Player {
 			newNode.setParent(node);
 			node.getChildArray().add(newNode);
 
-			logger.debug("Child Node : " + newNode.getState().getGameState().toString() + "RunTime config"
-					+ newNode.getState().getModelInputConfig().toString());
+//			logger.debug("Child Node : " + newNode.getState().getGameState().toString() + "RunTime config"
+//					+ newNode.getState().getModelInputConfig().toString());
 
 		}
-		logger.debug("Parent Node childrens: " + node.getChildArray().size());
+//		logger.debug("Parent Node childrens: " + node.getChildArray().size());
 		// logger.info("Parent Node : " + node.getState().getGameState().toString());
 	}
 
@@ -191,8 +191,8 @@ public class InformedMonteCarloPlayer implements Player {
 			MCTSNode tempNode = node;
 			NodeState tempState = tempNode.getState();
 			IntermediateGameState tempIntermediateGameState = tempState.getGameState();
-			logger.debug("Random Playout Intermediate Status :" + tempIntermediateGameState.toString());
-			logger.debug("Random Playout Run Configuration Status :" + tempState.getModelInputConfig());
+//			logger.debug("Random Playout Intermediate Status :" + tempIntermediateGameState.toString());
+//			logger.debug("Random Playout Run Configuration Status :" + tempState.getModelInputConfig());
 			ModelInputConfig tempModelInputConfig = tempState.getModelInputConfig();
 
 			SimulatedInformedPlayerInstance playerA = new SimulatedInformedPlayerInstance(name,
@@ -209,13 +209,13 @@ public class InformedMonteCarloPlayer implements Player {
 			// game.getHistory().printHistory();
 			wincount += winner == playerA ? 1 : 0;
 
-			logger.debug("Wincount" + wincount);
+//			logger.debug("Wincount" + wincount);
 
 			return wincount;
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.error(e.toString());
-			System.out.println(e);
+//			logger.error(e.toString());
+//			System.out.println(e);
 			return 0;
 		}
 

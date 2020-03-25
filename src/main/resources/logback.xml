@@ -16,9 +16,9 @@
 		</encoder>
 	</appender>
 
-	<logger name="de.upb.mlseminar" level="INFO" />
+	<logger name="de.upb.mlseminar" level="OFF" />
 	
-	<root level="debug">
+	<root level="OFF">
 		<appender-ref ref="STDOUT" />
 	</root>
 </configuration>

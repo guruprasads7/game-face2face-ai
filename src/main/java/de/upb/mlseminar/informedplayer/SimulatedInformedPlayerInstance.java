@@ -89,8 +89,8 @@ public class SimulatedInformedPlayerInstance implements Player {
 				ownDiscardPileIncreamentFactor, opponentDiscardPileThreshold, opponentDiscardPileIncreamentFactor,
 				minNumOfPlacements);
 
-		logger.debug("Class call count : " + classCallCount);
-		logger.debug("Method call count : " + methodCallCount);
+//		logger.debug("Class call count : " + classCallCount);
+//		logger.debug("Method call count : " + methodCallCount);
 
 		// int counter = TestInformedPlayerInstance.classCallCount;
 
@@ -104,12 +104,12 @@ public class SimulatedInformedPlayerInstance implements Player {
 				return new Move(placements);
 			}
 
-			logger.debug("Hand Card Before the call" + childState.getCurrentHandCards().toString());
-			logger.debug("Card Placements Before the call" + childState.getListOfCardPlacements().toString());
+//			logger.debug("Hand Card Before the call" + childState.getCurrentHandCards().toString());
+//			logger.debug("Card Placements Before the call" + childState.getListOfCardPlacements().toString());
 
 			if (methodCallCount == 1 && childState.getListOfCardPlacements().size() >= 2) {
 
-				logger.debug("Intermediate states have placement list");
+//				logger.debug("Intermediate states have placement list");
 				placements = childState.getListOfCardPlacements();
 
 				// this.intermediateGameState = constructIntermediateGameState(gameState);
@@ -119,22 +119,22 @@ public class SimulatedInformedPlayerInstance implements Player {
 			// System.out.println("hello inside increamentor");
 			IntermediateGameState currentGameState = constructIntermediateGameState(gameState);
 			IntermediateGameState resultState = playerCore.getCardPlacement(currentGameState);
-			logger.debug("Hand Card" + resultState.getCurrentHandCards().toString());
-			logger.debug("after the call" + resultState.toString());
+//			logger.debug("Hand Card" + resultState.getCurrentHandCards().toString());
+//			logger.debug("after the call" + resultState.toString());
 			placements = resultState.getListOfCardPlacements();
-			logger.debug("List of possible moves from InformedPlayerInstance are =");
+//			logger.debug("List of possible moves from InformedPlayerInstance are =");
 			// placements.forEach(System.out::println);
 
 			// this.intermediateGameState = constructIntermediateGameState(gameState);
 			Move move = new Move(placements);
-			logger.debug("Move is " + move.getPlacements());
+//			logger.debug("Move is " + move.getPlacements());
 
 			return move;
 
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.error(e.toString());
-			System.out.println(e);
+//			logger.error(e.toString());
+//			System.out.println(e);
 			return new Move(placements);
 		}
 
